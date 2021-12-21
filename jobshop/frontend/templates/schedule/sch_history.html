@@ -1,0 +1,117 @@
+{% extends "common/header.html" %}
+{% block content %}
+<style>
+    .pknu-search-form {
+        position:absolute;
+        top: -60px;
+    }
+</style>
+<!-- DataTales Example -->
+<div class="card shadow mb-4" style="margin-top: 85px;">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">조회</h6>
+    </div>
+    <div class="card-body">
+        <div class="pknu-table-responsive">
+            <form method="get" action="{% url 'schedule.history' %}">
+                <div class="col-auto pknu-searchDate pknu-search-form">
+                    <div class="col-lg-2 col-md-3 pknu-searchDate-dd">
+                        <label>스케쥴 일자</label>
+                    </div>
+                    <div class="col-lg-3 col-md-4 pknu-searchDate-dd" >
+                         <input class="form-control text-center" type="text" name="dateFrom" id="dateFrom" value="{{ dateFrom }}"/>
+                    </div>
+                    <div class="col-lg-1 col-md-1 pknu-searchDate-dd">~</div>
+                    <div class="col-lg-3 col-md-4 pknu-searchDate-dd" style="margin-right:0.4rem;">
+                        <input class="form-control text-center" type="text" name="dateTo" id="dateTo" value="{{ dateTo }}"/>
+                    </div>
+                    <div class="col-pos-right">
+                        <button id="searchBtn" href="#" class="d-sm-inline-block btn btn-sm btn-primary shadow-sm"><i class="fas fa-search mr-1"></i>검색</button>
+                    </div>
+                </div>
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th scope="col">번호</th>
+                            <th scope="col">스케쥴링실행일자</th>
+                            <th scope="col">오더일자</th>
+                            <th scope="col">오더번호</th>
+                            <th scope="col">작업기한</th>
+                            <th scope="col">계획 횟수</th>
+                            <th scope="col">차트</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sch in sch_list %}
+                        <tr>
+                            <td>{{forloop.counter}}</td>
+                            <td>{{sch.exe_date}}</td>
+                            <td>{{sch.sch_date}}</td>
+                            <td>{{sch.orderid}}</td>
+                            <td>{{sch.exp_date}}</td>
+                            <td>{{sch.max_count}}</td>
+                            <td width="130">
+                                <a id="chartBtn" href="{% url 'schedule.history_chart' id=sch.orderid %}" target="_blank" class="d-sm-inline-block btn btn-sm btn-primary shadow-sm"><i class="fas fa-chart-bar mr-1"></i>간트차트</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<!-- Scroll to Top Button-->
+<a class="scroll-to-top rounded" href="#page-top">
+    <i class="fas fa-angle-up"></i>
+</a>
+<div id="css-loader" class="loader loader-default"></div>
+
+<script>
+    function dateformat(value){
+        var year = value.substring(0,4);
+        var month = value.substring(4,6);
+        var day = value.substring(6,8);
+        var date = year + '-' + month + '-' + day;
+        return date;
+    }
+
+    $(function(){
+        const today = moment();
+        flatpickr("#dateTo", {
+               locale: Flatpickr.l10ns.ko,
+               enableTime: false,
+               dateFormat: "Y-m-d",
+               disableMobile: true,
+               // defaultDate: $('#dateTo').val()
+               defaultDate: [today.format('YYYY-MM-DD')]
+        });
+        flatpickr("#dateFrom", {
+               locale: Flatpickr.l10ns.ko,
+               enableTime: false,
+               dateFormat: "Y-m-d",
+               disableMobile: true,
+               defaultDate: $('#dateFrom').val()
+        });
+        $('#searchBtn').on('click',function(){
+            doSearch(
+              $('#dateFrom').val().replace(/\-/g,''),
+              $('#dateTo').val().replace(/\-/g,'')
+            );
+        })
+
+        function doSearch(dateFrom, dateTo){
+            $.when(
+               $.ajax({url: "{% url 'schedule_history' %}"})
+            ).then(function(_data){
+                for(var idx in _data){
+                    console.log(_data);
+                }
+                $('#css-loader').removeClass("is-active");
+            })
+        }
+    });
+</script>
+{% endblock %}

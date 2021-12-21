@@ -1,0 +1,125 @@
+{% extends "common/header.html" %}
+{% block content %}
+
+<!-- Modal-->
+<div class="modal fade" id="excelUploadModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" style="padding-right: 17px; display: block;" aria-modal="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <!--modal header-->
+            <div class="modal-header">
+                <!--<h5 class="modal-title" id="">설비 정보 업로드</h5>-->
+                <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <!--modal header-->
+            <!--modal body-->
+            <div class="modal-body">
+                <div class="modal-body">
+                    <div class="md-form mb-3">
+                        <div class="col-auto">
+                            <form action="#" class="dropzone" name="compDocDropzone" id="compDocDropzone" enctype="multipart/form-data">
+                                <div class="fallback">
+                                    <input type="file" name="file" />
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!--modal body-->
+            <!--modal footer-->
+            <div class="modal-footer">
+                <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="fileUploadBtn">Upload</button>
+            </div>
+            <!--modal footer-->
+        </div>
+    </div>
+</div>
+<!-- Modal-->
+
+
+<!-- Scroll to Top Button-->
+<a class="scroll-to-top rounded" href="#page-top">
+    <i class="fas fa-angle-up"></i>
+</a>
+
+<!--게시판 관련 js-->
+<!-- Page level plugins -->
+<script src="/static/vendor/datatables/jquery.dataTables.min.js"></script>
+<script src="/static/vendor/datatables/dataTables.bootstrap4.min.js"></script>
+<script src="/static/js/dropzone/dropzone.min.js"></script>
+<!-- Page level custom scripts -->
+<script src="/static/js/demo/datatables-demo.js"></script>
+
+<script>
+    Dropzone.autoDiscover = false; // dropzone 초기화
+    function hasExtension(fileName, exts) {
+        return (new RegExp('(' + exts.join('|').replace(/\./g, '\\.') + ')$')).test(fileName);
+    }
+    $(function(){
+        $("#excelUploadModal").modal("show");
+        // csv 업로드
+        var _url = "{% url 'csvCreate' %}";
+        var fileName = "";
+        var formData = new FormData();
+        //dropzone에 파일등록
+        var dropzone = new Dropzone("#compDocDropzone", {
+            // autoProcessQueue: false, // dropzone 자동 실행 막기
+            url: "{% url 'upload' %}",
+            addRemoveLinks: true,
+            maxFiles: 1,
+            // acceptedFiles : '.csv, text/csv, application/csv, text/x-csv, application/x-csv, text/comma-separated-values, text/x-comma-separated-values',
+            init: function(e) {
+                // 파일 업로드 성공 시
+                this.on('success', function(file) {
+                    formData.append("file", dropzone.getAcceptedFiles()[0]);
+                    fileName = file.name;
+                    // $('#excelUploadModal').modal('hide');
+                    //확장자 체크(작업장별 다름)
+                    if(!hasExtension(fileName, ['csv'])){
+                        Swal.fire({
+                          icon: 'error',
+                          title: '파일 형식 오류',
+                          text: '.csv 파일을 업로드 해 주세요.',
+                        });
+                        return false;
+                    }
+                });
+
+            }
+        });
+
+        $("#fileUploadBtn").on("click", function(e){
+            $.ajax({
+                url: _url,
+                method:'POST',
+                contentType: false,
+                processData: false,
+                data: formData,
+                success: function(result){
+                    if(result.message == 'error'){
+                        Swal.fire({
+                          icon: 'error',
+                          title: '파일 형식 오류',
+                          text: '데이터 항목을 형식에 맞춘 후 업로드 해 주세요.',
+                          footer: '<a href="">형식 다운로드</a>'
+                        });
+                        return false;
+                    } else {
+                        $('#excelUploadModal').modal('hide');
+                    }
+                },
+                error: function(error){
+                    console.log(error);
+                    // $('#css-loader').removeClass("is-active");
+                }
+            });
+        });
+        $('.btn-icon-split').on('click', function(){
+            $('#excelUploadModal').modal('show');
+        });
+    });
+</script>
+{% endblock %}

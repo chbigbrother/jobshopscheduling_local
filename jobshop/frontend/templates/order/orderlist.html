@@ -1,0 +1,147 @@
+{% extends "common/header.html" %}
+{% block content %}
+<style>
+    .pknu-search-form {
+        position:absolute;
+        top: -60px;
+    }
+</style>
+<!-- DataTales Example -->
+<div class="card shadow mb-4" style="margin-top: 85px;">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">조회</h6>
+    </div>
+    <div class="card-body">
+        <div class="pknu-table-responsive">
+            <form method="get" action="{% url 'order.order_list_view' %}">
+                <div class="col-auto pknu-searchDate pknu-search-form">
+                    <div class="col-lg-2 col-md-3 pknu-searchDate-dd">
+                        <label>주문일자</label>
+                    </div>
+                    <div class="col-lg-3 col-md-4 pknu-searchDate-dd" >
+                         <input class="form-control text-center" type="text" name="dateFrom" id="dateFrom" value="{{ dateFrom }}"/>
+                    </div>
+                    <div class="col-lg-1 col-md-1 pknu-searchDate-dd">~</div>
+                    <div class="col-lg-3 col-md-4 pknu-searchDate-dd" style="margin-right:0.4rem;">
+                        <input class="form-control text-center" type="text" name="dateTo" id="dateTo" value="{{ dateTo }}"/>
+                    </div>
+                    <div class="col-pos-right">
+                        <button id="searchBtn" href="#" class="d-sm-inline-block btn btn-sm btn-primary shadow-sm"><i class="fas fa-search mr-1"></i>검색</button>
+                    </div>
+                </div>
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>순번</th>
+                            <th>신청자</th>
+                            <th>제품명</th>
+                            <th>소재타입</th>
+                            <th>구매수량(yd)</th>
+                            <th>희망납기일</th>
+                            <th>등록일</th>
+                            <th>연락처(Phone)</th>
+                            <th>email</th>
+                            <th style="text-align:center;">관리</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in order_list %}
+                        <tr>
+                            <td>{{forloop.counter}}</td>
+                            <td>{{order.cust_name}}</td>
+                            <td>{{order.textile_name}}</td>
+                            <td>{{order.textile_type}}</td>
+                            <td>{{order.amount}}</td>
+                            <td>{{order.exp_date}}</td>
+                            <td>{{order.sch_date}}</td>
+                            <td>{{order.contact}}</td>
+                            <td>{{order.email}}</td>
+                            <td style="text-align:center;">
+                                <a href="" id="edit_{{ comp.id }}"><i class="far fa-edit {{ comp.id }}"></i></a>
+                                <a href="" id="delete_{{ comp.id }}" style="margin-left:10px;"><i class="fas fa-trash-alt"></i></a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Scroll to Top Button-->
+<a class="scroll-to-top rounded" href="#page-top">
+    <i class="fas fa-angle-up"></i>
+</a>
+
+<!--게시판 관련 js-->
+<!-- Page level plugins -->
+<script src="/static/vendor/datatables/jquery.dataTables.min.js"></script>
+<script src="/static/vendor/datatables/dataTables.bootstrap4.min.js"></script>
+<script src="/static/js/dropzone/dropzone.min.js"></script>
+<!-- Page level custom scripts -->
+<script src="/static/js/demo/datatables-demo.js"></script>
+
+<script>
+    function dateformat(value){
+        var year = value.substring(0,4);
+        var month = value.substring(4,6);
+        var day = value.substring(6,8);
+        var date = year + '-' + month + '-' + day;
+        return date;
+    }
+
+    function hasExtension(fileName, exts) {
+        return (new RegExp('(' + exts.join('|').replace(/\./g, '\\.') + ')$')).test(fileName);
+    }
+    $(function(){
+        const today = moment();
+        // 검색 날짜 init
+        flatpickr("#dateTo", {
+               locale: Flatpickr.l10ns.ko,
+               enableTime: false,
+               dateFormat: "Y-m-d",
+               disableMobile: true,
+               defaultDate: $('#dateTo').val()
+               // defaultDate: [today.format('YYYY-MM-DD')]
+        });
+        flatpickr("#dateFrom", {
+               locale: Flatpickr.l10ns.ko,
+               enableTime: false,
+               dateFormat: "Y-m-d",
+               disableMobile: true,
+               defaultDate: $('#dateFrom').val()
+        });
+
+        $("#fileUploadBtn").on("click", function(e){
+            $.ajax({
+                url: _url,
+                method:'POST',
+                contentType: false,
+                processData: false,
+                data: formData,
+                success: function(result){
+                    if(result.message == 'error'){
+                        Swal.fire({
+                          icon: 'error',
+                          title: '파일 형식 오류',
+                          text: '데이터 항목을 형식에 맞춘 후 업로드 해 주세요.',
+                          footer: '<a href="">형식 다운로드</a>'
+                        });
+                        return false;
+                    } else {
+                        $('#excelUploadModal').modal('hide');
+                    }
+                },
+                error: function(error){
+                    console.log(error);
+                    // $('#css-loader').removeClass("is-active");
+                }
+            });
+        });
+        $('.btn-icon-split').on('click', function(){
+            $('#excelUploadModal').modal('show');
+        });
+    });
+</script>
+{% endblock %}

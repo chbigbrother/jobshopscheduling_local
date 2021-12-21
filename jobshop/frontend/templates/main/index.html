@@ -1,0 +1,282 @@
+{% extends "common/header.html" %}
+{% block content %}
+<!-- Page Heading -->
+<div class="row">
+    <div class="col-lg-12">
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <div class="d-sm-flex align-items-center mb-4">
+                        <!--<h1 class="h3 mb-0 text-gray-800">작업스케쥴링</h1>-->
+                        <input type="hidden" id="group_id" value="{{ user.groups.all.0.id }}">
+                        <input type="hidden" id="group_name" value="{{ user.groups.all.0.name }}">
+                        <input type="hidden" id="user_name" value="{{ user.username }}">
+                        <input type="hidden" id="user_id" value="{{ user.id }}">
+                        <div class="col-auto pknu-searchDate">
+                            <div class="col-lg-2 col-md-3 pknu-searchDate-dd">
+                                <label>주문일자</label>
+                            </div>
+                            <div class="col-lg-3 col-md-4 pknu-searchDate-dd" >
+                                 <input class="form-control text-center" type="text" name="dateFrom" id="dateFrom" value="{{ dateFrom }}"/>
+                            </div>
+                            <div class="col-lg-1 col-md-1 pknu-searchDate-dd">~</div>
+                            <div class="col-lg-3 col-md-4 pknu-searchDate-dd" style="margin-right:0.4rem;">
+                                <input class="form-control text-center" type="text" name="dateTo" id="dateTo" />
+                            </div>
+                            <div class="col-pos-right">
+                                <a id="searchBtn" href="#" class="d-sm-inline-block btn btn-sm btn-primary shadow-sm"><i class="fas fa-search mr-1"></i>검색</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+    </div>
+</div>
+<div class="row data-row" id="row">
+
+
+</div>
+<!-- Border Bottom Utilities -->
+    <!-- Scroll to Top Button-->
+    <a class="scroll-to-top rounded" href="#page-top">
+        <i class="fas fa-angle-up"></i>
+    </a>
+    <script>
+        function dateformat(value){
+            var year = value.substring(0,4);
+            var month = value.substring(4,6);
+            var day = value.substring(6,8);
+            var date = year + '-' + month + '-' + day;
+            return date;
+        }
+        var colors = ['secondary', 'success', 'info', 'warning', 'danger', 'dark','secondary', 'success', 'info', 'warning', 'danger', 'dark','secondary', 'success', 'info', 'warning', 'danger', 'dark'];
+        $(function(){
+            const today = moment();
+            // 검색 날짜 init
+            flatpickr("#dateTo", {
+                   locale: Flatpickr.l10ns.ko,
+                   enableTime: false,
+                   dateFormat: "Y-m-d",
+                   disableMobile: true,
+                   defaultDate: [today.format('YYYY-MM-DD')]
+            });
+            flatpickr("#dateFrom", {
+                   locale: Flatpickr.l10ns.ko,
+                   enableTime: false,
+                   dateFormat: "Y-m-d",
+                   disableMobile: true,
+                   defaultDate: $('#dateFrom').val()
+            });
+            function doSearch(dateFrom, dateTo){
+                var obj = new Object();
+                obj.dateFrom = $('#dateFrom').val().replace(/\-/g,'');
+                obj.dateTo = $('#dateTo').val().replace(/\-/g,'');
+                obj.groupName = $('#group_name').val();
+                obj.groupId = $('#group_id').val();
+                obj.userName = $('#user_name').val();
+                obj.userId = $('#user_id').val();
+                $.ajax({
+                    url: "{% url 'order.order_list_view' %}",
+                    method:'GET',
+                    processData: false,
+                    type:'json',
+                    contentType: 'application/json',
+                    data: JSON.stringify(obj),
+                    success: function(data){
+                        console.log(data);
+                        var innerHTML = '';
+                        var singleHTML = '';
+                        var inner = document.createElement('div');
+                        var div = document.createElement('div');
+                        inner.className = 'col-lg-12';
+                        inner.height = "100%";
+                        var name = '';
+                        if(data['message'] == 'null'){
+                            $('.data-row').html('<div class="col-lg-6">'+
+                                                        '<div class="card mb-4 py-3 border-left-primary" style="width:100%;">'+
+                                                            '<div class="card-body">'+
+                                                                '해당 일의 주문 데이터가 존재하지 않습니다.'+
+                                                            '</div>'+
+                                                        '</div>');
+                        } else {
+                            if(data[0]!=''){
+                                // 회사별 색상 정하기
+                                for(var j=0; j<data[data.length-1].length; j++){
+                                    for(var i=0; i<data.length; i++){
+                                        var type = data[i].textile_type=='weave'?'재직':'편직';
+                                        if(data[i].length>1 && typeof data[i].length != 'undefined' && typeof data[i][j].sch_date != 'undefined'){
+                                                inner.innerHTML =
+                                                                '<div class="card mb-2 py-1 border-bottom-primary" >' +
+                                                                    '<div class="card-body ' + data[i][0].cust_name + '">' +
+                                                                        '<div class="card border-left-primary shadow h-100 py-2">' +
+                                                                            '<div class="card-body">' +
+                                                                                '<div class="row no-gutters align-items-center">' +
+                                                                                    '<div class="col mr-2">' +
+                                                                                        '<div class="text-xs font-weight-bold text-primary text-uppercase mb-1">' +
+                                                                                            dateformat(data[i][0].sch_date) + '</div>' +
+                                                                                        '<div class="h5 mb-0 font-weight-bold text-gray-800">주문자 :' + data[i][0].cust_name + '</div>' +
+                                                                                        '<div class="h6 mb-0 font-weight-bold text-gray-800">기한 :' + dateformat(data[i][0].exp_date) + '</div>' +
+                                                                                    '</div>' +
+                                                                                    '<div class="col-auto">' +
+                                                                                        '<i class="fas fa-calendar fa-2x text-gray-300"></i>' +
+                                                                                    '</div>' +
+                                                                                '</div>' +
+                                                                            '</div>' +
+                                                                        '</div>';
+                                                for(var k=0; k<data[i].length; k++){
+                                                    name = data[i][0].cust_name;
+                                                    if(data[i][k].comp_name == data[data.length-1][j]){
+                                                          div.innerHTML += '<div class="card-body" style="display:inline-block">'+
+                                                                                '<div class="card mb-4 py-3 border-left border-left-secondary">' +
+                                                                                    '<div class="card-body">' +
+                                                                                        '<div class="h5 mb-0 font-weight-bold text-gray-800">' + type + '/' + data[i][k].textile_name + '</div>' +
+                                                                                        '<div class="h6 mb-0 font-weight-bold text-gray-800">오더번호 : ' + data[i][k].order_id + '</div>' +
+                                                                                        '<div class="h6 mb-0 font-weight-bold text-gray-800">수량 :' + data[i][k].amount + 'yd</div>' +
+                                                                                    '</div>' +
+                                                                                '</div>' +
+                                                                                '<div class="card mb-4 py-3 border-left border-left-' + colors[j] + '">' +
+                                                                                    '<div class="card-body">' +
+                                                                                        '<div class="col-lg-12 mb-4">' +
+                                                                                            '<div class="card bg-' + colors[j] + ' text-white shadow">' +
+                                                                                                '<div class="card-body">' +
+                                                                                                    data[i][k].comp_name +
+                                                                                                    '<div class="text-white-50 small">작업 가능</div>' +
+                                                                                                '</div>' +
+                                                                                            '</div>' +
+                                                                                        '</div>' +
+                                                                                    '</div>' +
+                                                                                '</div>' +
+                                                                            '</div>'+
+
+                                                                        '</div>' +
+                                                                    '</div>' +
+                                                                 '</div>';
+                                                    }
+                                                }
+                                        } else {
+                                            if(data.length >2 && data[i].comp_name == data[data.length-1][j]){
+                                                innerHTML += '<div class="col-lg-12" style="height:100%;">' +
+                                                            '<div class="card mb-2 py-1 border-bottom-primary" >' +
+                                                                '<div class="card-body" style="height: 12rem;">' +
+                                                                    '<div class="card border-left-primary shadow h-100 py-2">' +
+                                                                        '<div class="card-body">' +
+                                                                            '<div class="row no-gutters align-items-center">' +
+                                                                                '<div class="col mr-2">' +
+                                                                                    '<div class="text-xs font-weight-bold text-primary text-uppercase mb-1">' +
+                                                                                        dateformat(data[i].sch_date) + '</div>' +
+                                                                                    '<div class="h5 mb-0 font-weight-bold text-gray-800">주문자 :' + data[i].cust_name + '</div>' +
+                                                                                    '<div class="h6 mb-0 font-weight-bold text-gray-800">기한 :' + dateformat(data[i].exp_date) + '</div>' +
+                                                                                '</div>' +
+                                                                                '<div class="col-auto">' +
+                                                                                    '<i class="fas fa-calendar fa-2x text-gray-300"></i>' +
+                                                                                '</div>' +
+                                                                            '</div>' +
+                                                                        '</div>' +
+                                                                    '</div>' +
+
+                                                                    '<div class="card mb-4 py-3 border-left border-left-secondary">' +
+                                                                        '<div class="card-body">' +
+                                                                            '<div class="h5 mb-0 font-weight-bold text-gray-800">' + type + '/' + data[i].textile_name + '</div>' +
+                                                                            '<div class="h6 mb-0 font-weight-bold text-gray-800">오더번호 : ' + data[i].order_id + '</div>' +
+                                                                            '<div class="h6 mb-0 font-weight-bold text-gray-800">수량 :' + data[i].amount + 'yd</div>' +
+                                                                        '</div>' +
+                                                                    '</div>' +
+                                                                    '<div class="card mb-4 py-3 border-left border-left-' + colors[j] + '">' +
+                                                                        '<div class="card-body">' +
+                                                                            '<div class="col-lg-12 mb-4">' +
+                                                                                '<div class="card bg-' + colors[j] + ' text-white shadow">' +
+                                                                                    '<div class="card-body">' +
+                                                                                        data[i].comp_name +
+                                                                                        '<div class="text-white-50 small">작업 가능</div>' +
+                                                                                    '</div>' +
+                                                                                '</div>' +
+                                                                            '</div>' +
+                                                                        '</div>' +
+                                                                    '</div>' +
+
+                                                                '</div>' +
+                                                            '</div>' +
+                                                         '</div>';
+                                            }
+                                            if(data.length == 2 && data[data.length-1][j]){
+                                                if(typeof data[i][0].sch_date != 'undefined'){
+                                                    innerHTML += '<div class="col-lg-12" style="height:100%;">' +
+                                                                '<div class="card mb-2 py-1 border-bottom-primary" >' +
+                                                                    '<div class="card-body" style="height: 12rem;">' +
+                                                                        '<div class="card border-left-primary shadow h-100 py-2">' +
+                                                                            '<div class="card-body">' +
+                                                                                '<div class="row no-gutters align-items-center">' +
+                                                                                    '<div class="col mr-2">' +
+                                                                                        '<div class="text-xs font-weight-bold text-primary text-uppercase mb-1">' +
+                                                                                            dateformat(data[i][0].sch_date) + '</div>' +
+                                                                                        '<div class="h5 mb-0 font-weight-bold text-gray-800">주문자 :' + data[i][0].cust_name + '</div>' +
+                                                                                        '<div class="h6 mb-0 font-weight-bold text-gray-800">기한 :' + dateformat(data[i][0].exp_date) + '</div>' +
+                                                                                    '</div>' +
+                                                                                    '<div class="col-auto">' +
+                                                                                        '<i class="fas fa-calendar fa-2x text-gray-300"></i>' +
+                                                                                    '</div>' +
+                                                                                '</div>' +
+                                                                            '</div>' +
+                                                                        '</div>' +
+
+                                                                        '<div class="card mb-4 py-3 border-left border-left-secondary">' +
+                                                                            '<div class="card-body">' +
+                                                                                '<div class="h5 mb-0 font-weight-bold text-gray-800">' + type + '/' + data[i][0].textile_name + '</div>' +
+                                                                                '<div class="h6 mb-0 font-weight-bold text-gray-800">오더번호 : ' + data[i][0].order_id + '</div>' +
+                                                                                '<div class="h6 mb-0 font-weight-bold text-gray-800">수량 :' + data[i][0].amount + 'yd</div>' +
+                                                                            '</div>' +
+                                                                        '</div>' +
+                                                                        '<div class="card mb-4 py-3 border-left border-left-' + colors[j] + '">' +
+                                                                            '<div class="card-body">' +
+                                                                                '<div class="col-lg-12 mb-4">' +
+                                                                                    '<div class="card bg-' + colors[j] + ' text-white shadow">' +
+                                                                                        '<div class="card-body">' +
+                                                                                            data[i][0].comp_name +
+                                                                                            '<div class="text-white-50 small">작업 가능</div>' +
+                                                                                        '</div>' +
+                                                                                    '</div>' +
+                                                                                '</div>' +
+                                                                            '</div>' +
+                                                                        '</div>' +
+
+                                                                    '</div>' +
+                                                                '</div>' +
+                                                             '</div>';
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                $('.data-row').html(innerHTML);
+                                document.getElementsByClassName('data-row')[0].appendChild(inner);
+                                if(data.length > 2) {
+                                    document.getElementsByClassName(name)[0].appendChild(div);
+                                } else {
+                                    document.getElementsByClassName('data-row')[0].appendChild(div);
+                                }
+                            } else {
+                                $('.data-row').html('<div class="col-lg-6">'+
+                                                        '<div class="card mb-4 py-3 border-left-primary" style="width:100%;">'+
+                                                            '<div class="card-body">'+
+                                                                '해당 일의 주문 데이터가 존재하지 않습니다.'+
+                                                            '</div>'+
+                                                        '</div>');
+                            }
+                        }
+                    }
+                });
+            }
+            $('#searchBtn').on('click',function(){
+                $('.data-row').html('');
+                doSearch(
+                  $('#dateFrom').val().replace(/\-/g,''),
+                  $('#dateTo').val().replace(/\-/g,'')
+                );
+            })
+            doSearch(
+              $('#dateFrom').val().replace(/\-/g,''),
+              $('#dateTo').val().replace(/\-/g,'')
+            );
+        });
+
+    </script>
+{% endblock %}
