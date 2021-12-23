@@ -35,7 +35,6 @@
                             <th>순번</th>
                             <th>신청자</th>
                             <th>제품명</th>
-                            <th>소재타입</th>
                             <th>구매수량(yd)</th>
                             <th>희망납기일</th>
                             <th>등록일</th>
@@ -49,8 +48,7 @@
                         <tr>
                             <td>{{forloop.counter}}</td>
                             <td>{{order.cust_name}}</td>
-                            <td>{{order.textile_name}}</td>
-                            <td>{{order.textile_type}}</td>
+                            <td>{{order.prod_id.prod_name}}</td>
                             <td>{{order.amount}}</td>
                             <td>{{order.exp_date}}</td>
                             <td>{{order.sch_date}}</td>

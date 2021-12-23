@@ -1,0 +1,124 @@
+{% extends "common/header.html" %}
+{% block content %}
+
+<!-- Page Heading -->
+<!-- DataTales Example -->
+<div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+        <h6 class="m-0 font-weight-bold text-primary">조회</h6>
+        <div class="dropdown no-arrow">
+            <a href="{% url 'company.prod_csv_download' %}" class="btn btn-success btn-icon-split">
+                <span class="icon text-white-50">
+                    <i class="fas fa-check"></i>
+                </span>
+                <span class="text">데이터 다운로드</span>
+            </a>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>순번</th>
+                        <th>제품명</th>
+                        <th>rpm</th>
+                        <th>밀도</th>
+                        <th>일일생산량</th>
+                        <th>생성일자</th>
+                        <th>수정일자</th>
+                        <th style="text-align:center;">관리</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for comp in comp_list %}
+                    <tr>
+                        <td>{{forloop.counter}}</td>
+                        <td>{{comp.prod_name}}</td>
+                        <td>{{comp.rpm}}</td>
+                        <td>{{comp.density}}</td>
+                        <td>{{comp.daily_prod_rate}}</td>
+                        <td>{{comp.created_at}}</td>
+                        <td>{{comp.modified_at}}</td>
+                        <td style="text-align:center;">
+                            <a href="" id="edit_{{ comp.id }}"><i class="far fa-edit {{ comp.id }}"></i></a>
+                            <a href="" id="delete_{{ comp.id }}" style="margin-left:10px;"><i class="fas fa-trash-alt"></i></a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- Scroll to Top Button-->
+<a class="scroll-to-top rounded" href="#page-top">
+    <i class="fas fa-angle-up"></i>
+</a>
+
+<!--게시판 관련 js-->
+<!-- Page level plugins -->
+<script src="/static/vendor/datatables/jquery.dataTables.min.js"></script>
+<script src="/static/vendor/datatables/dataTables.bootstrap4.min.js"></script>
+<!-- Page level custom scripts -->
+<script src="/static/js/demo/datatables-demo.js"></script>
+<!-- sweetalert 설치 후 사용가능
+     $ npm install sweetalert2 -->
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<!--게시판 관련 js-->
+<script>
+$(function(){
+    const today = moment();
+    // 검색 날짜 init
+    flatpickr("#dateTo", {
+           locale: Flatpickr.l10ns.ko,
+           enableTime: false,
+           dateFormat: "Y-m-d",
+           disableMobile: true,
+           defaultDate: $('#dateTo').val()
+           // defaultDate: [today.format('YYYY-MM-DD')]
+    });
+    flatpickr("#dateFrom", {
+           locale: Flatpickr.l10ns.ko,
+           enableTime: false,
+           dateFormat: "Y-m-d",
+           disableMobile: true,
+           defaultDate: $('#dateFrom').val()
+    });
+    // 수정
+    $('.fa-edit').on('click', function(){
+        $('#editModal').modal("show");
+    });
+    // 삭제
+    var selectdata = new Object;
+    $('.fa-trash-alt').on('click', function(e){
+        var str = e.target.parentElement.id.split('_');
+        selectdata.id = str[1];
+        Swal.fire({
+          icon: 'error',
+          title: '삭제하시겠습니까?',
+          showCancelButton: true,
+          text: ''
+        }).then(function(){
+            $.ajax({
+                url: "{% url 'delete' %}",
+                data : JSON.stringify(selectdata),
+                type:'json',
+                contentType: 'application/json',
+                method: "POST",
+                success: function(data){
+                    location.reload();
+                },
+                error: function(error){
+                    console.log(error)
+                }
+            });
+        });
+        return false;
+    });
+});
+</script>
+{% endblock %}

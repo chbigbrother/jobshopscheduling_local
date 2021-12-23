@@ -79,15 +79,21 @@
                     <span>업체정보</span>
                 </a>
                 <div id="collapseTwo" class="collapse {% if request.resolver_match.url_name == "company.index" %} show
+                {% elif request.resolver_match.url_name == "company.product" %} show
                 {% elif request.resolver_match.url_name == "company.facility" %} show
-                {% elif request.resolver_match.url_name == "company.daily" %} show
+                {% elif request.resolver_match.url_name == "company.facility" %} show
+                {% elif request.resolver_match.url_name == "company.product.view" %} show
                 {% elif request.resolver_match.url_name == "company.list" %} show
                 {% endif %}" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
                         <a href="/company/" class="collapse-item {% if request.resolver_match.url_name == "company.index" %} active {% endif %}" >설비정보등록</a>
-                        <a href="/company/facility/list/" class="collapse-item {% if request.resolver_match.url_name == "company.facility" %} active {% endif %}" >설비정보검색</a>
-                        <a href="/company/daily/production/" class="collapse-item {% if request.resolver_match.url_name == "company.daily" %} active {% endif %}" >실제가동현황</a>
-                        <a href="/company/info/list/" class="collapse-item {% if request.resolver_match.url_name == "company.list" %} active {% endif %}" >업체정보검색</a>
+                        <a href="/company/info/list/" class="collapse-item {% if request.resolver_match.url_name == "company.list" %} active {% endif %}" >설비정보검색</a>
+                        <a href="/company/facility/list/" class="collapse-item {% if request.resolver_match.url_name == "company.facility" %} active {% endif %}" >설비현황검색</a>
+                        <!-- Divider -->
+                        <hr style="margin:0;"/>
+                        <a href="/company/product/regist/" class="collapse-item {% if request.resolver_match.url_name == "company.product" %} active {% endif %}" >제품정보등록</a>
+                        <a href="/company/product/search/" class="collapse-item {% if request.resolver_match.url_name == "company.product.view" %} active {% endif %}" >제품정보검색</a>
+
                     </div>
                 </div>
             </li>

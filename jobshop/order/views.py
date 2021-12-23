@@ -29,7 +29,20 @@ def home(request):
 # 수주관리검색 order management search HTML
 def order_list_view(request):
     template_name = 'order/orderlist.html'
+
+    dateFrom, dateTo, order_list = order_list_query(request)
+    context = {
+        'dateFrom': dateFrom,
+        'dateTo': dateTo,
+        'order_list': order_list,
+        'path': '수주관리 / 수주관리검색',
+        'selected': 'ordermanagement'
+    }
+    return render(request, template_name, context)
+
+def order_list_query(request):
     date = datetime.datetime.today() - timedelta(days=3)
+
     if 'dateFrom' in request.GET:
         sch_date_from = datetime.datetime.strptime(request.GET['dateFrom'], "%Y-%m-%d")
         sch_date_to = datetime.datetime.strptime(request.GET['dateTo'], "%Y-%m-%d")
@@ -41,17 +54,27 @@ def order_list_view(request):
     else:
         sch_date_from = date
         sch_date_to = datetime.datetime.today()
-        order_list = OrderList.objects.filter(sch_date__gte=date.strftime("%Y%m%d"), sch_date__lte=datetime.datetime.today().strftime("%Y%m%d"))
+        order_list = OrderList.objects.filter(sch_date__gte=date.strftime("%Y%m%d"),
+                                              sch_date__lte=datetime.datetime.today().strftime("%Y%m%d"))
 
-    context = {
-        'dateFrom': sch_date_from.strftime("%Y-%m-%d"),
-        'dateTo': sch_date_to.strftime("%Y-%m-%d"),
-        'order_list': order_list,
-        'path': '수주관리 / 수주관리검색',
-        'selected': 'ordermanagement'
-    }
-    return render(request, template_name, context)
+    return sch_date_from.strftime("%Y-%m-%d"), sch_date_to.strftime("%Y-%m-%d"), order_list
 
+def order_list_search(request):
+
+    date = datetime.datetime.today() - timedelta(days=3)
+    for i in request.GET:
+        request = json.loads(i)
+
+    if request['dateFrom'] != None:
+        date_from = request['dateFrom'].replace('-', '')
+        date_to = request['dateTo'].replace('-', '')
+
+        order_list = OrderList.objects.filter(sch_date__gte=date_from).filter(sch_date__lte=date_to)
+    else:
+        order_list = OrderList.objects.filter(sch_date__gte=date.strftime("%Y%m%d"),
+                                              sch_date__lte=datetime.datetime.today().strftime("%Y%m%d"))
+
+    return JsonResponse(list(order_list.values()), safe=False)
 
 def fixed_order(request):
     for i in request.GET:
@@ -268,7 +291,6 @@ def fixed_order(request):
 
 # csv file upload
 def upload_file(request):
-
     if request.method == 'POST':
         form = FileUploadCsv(request.POST, request.FILES)
         if form.is_valid():
@@ -288,15 +310,13 @@ def order_read_csv(request):
     # 1. 데이터 컬럼 일치하지 않을 때
     for col in read.columns:
         if '고객명' in col:
-            col = read[['고객명', '주문일자', '마감기한', '섬유유형', '섬유이름', '밀도', '수량', '전화번호', '이메일']]
-            for row in range(int(col.size / 9)):
+            col = read[['고객명', '주문일자', '마감기한', '제품명', '수량', '전화번호', '이메일']]
+            for row in range(int(col.size / 7)):
                 data_dict = {}
                 data_dict['cust_name'] = str(col.loc[[row], ['고객명']].values).replace('[', '').replace(']', '').replace("'", '')
                 data_dict['sch_date'] = str(col.loc[[row], ['주문일자']].values).replace('[', '').replace(']', '').replace("'", '')
                 data_dict['exp_date'] = str(col.loc[[row], ['마감기한']].values).replace('[', '').replace(']', '').replace("'", '')
-                data_dict['textile_type'] = str(col.loc[[row], ['섬유유형']].values).replace('[', '').replace(']', '').replace("'", '')
-                data_dict['textile_name'] = str(col.loc[[row], ['섬유이름']].values).replace('[', '').replace(']', '').replace("'", '')
-                data_dict['density'] = str(col.loc[[row], ['밀도']].values).replace('[', '').replace(']', '').replace("'", '')
+                data_dict['prod_name'] = str(col.loc[[row], ['제품명']].values).replace('[', '').replace(']', '').replace("'", '')
                 data_dict['amount'] = str(col.loc[[row], ['수량']].values).replace('[', '').replace(']', '').replace("'", '')
                 data_dict['contact'] = str(col.loc[[row], ['전화번호']].values).replace('[', '').replace(']', '').replace("'", '')
                 data_dict['email'] = str(col.loc[[row], ['이메일']].values).replace('[', '').replace(']', '').replace("'", '')
@@ -324,8 +344,8 @@ def order_delete_read_csv(request):
     # 1. 데이터 컬럼 일치하지 않을 때
     for col in read.columns:
         if '고객명' in col:
-            col = read[['고객명', '주문일자', '마감기한', '섬유유형', '섬유이름', '밀도', '수량', '전화번호', '이메일']]
-            for row in range(int(col.size / 9)):
+            col = read[['고객명', '주문일자', '마감기한', '제품명', '수량', '전화번호', '이메일']]
+            for row in range(int(col.size / 7)):
                 if str(col.loc[[row], ['고객명']].values).replace('[', '').replace(']', '').replace("'", '') == name and str(col.loc[[row], ['수량']].values).replace('[', '').replace(']', '').replace("'", '') == amount:
                     continue;
                 else:
@@ -333,9 +353,7 @@ def order_delete_read_csv(request):
                     data_dict['cust_name'] = str(col.loc[[row], ['고객명']].values).replace('[', '').replace(']', '').replace("'", '')
                     data_dict['sch_date'] = str(col.loc[[row], ['주문일자']].values).replace('[', '').replace(']', '').replace("'", '')
                     data_dict['exp_date'] = str(col.loc[[row], ['마감기한']].values).replace('[', '').replace(']', '').replace("'", '')
-                    data_dict['textile_type'] = str(col.loc[[row], ['섬유유형']].values).replace('[', '').replace(']', '').replace("'", '')
-                    data_dict['textile_name'] = str(col.loc[[row], ['섬유이름']].values).replace('[', '').replace(']', '').replace("'", '')
-                    data_dict['density'] = str(col.loc[[row], ['밀도']].values).replace('[', '').replace(']', '').replace("'", '')
+                    data_dict['prod_name'] = str(col.loc[[row], ['제품명']].values).replace('[', '').replace(']', '').replace("'", '')
                     data_dict['amount'] = str(col.loc[[row], ['수량']].values).replace('[', '').replace(']', '').replace("'", '')
                     data_dict['contact'] = str(col.loc[[row], ['전화번호']].values).replace('[', '').replace(']', '').replace("'", '')
                     data_dict['email'] = str(col.loc[[row], ['이메일']].values).replace('[', '').replace(']', '').replace("'", '')
@@ -359,14 +377,15 @@ def order_update_csv(request):
             else:
                 int_id = id_count.order_id[3:]
             str_id = id_generate('ORD', int_id)
+            print(request.POST.getlist('prod_name')[i])
+            prod_name = Product.objects.get(prod_name=request.POST.getlist('prod_name')[i])
+            print('prod_name: ', prod_name)
             OrderList.objects.create(
                 order_id=str_id,
                 cust_name=request.POST.getlist('cust_name')[i],
                 sch_date=request.POST.getlist('sch_date')[i],
                 exp_date=request.POST.getlist('exp_date')[i],
-                textile_type=request.POST.getlist('textile_type')[i],
-                textile_name=request.POST.getlist('textile_name')[i],
-                density=request.POST.getlist('density')[i],
+                prod_id=Product.objects.get(prod_id=prod_name.prod_id),
                 amount=request.POST.getlist('amount')[i],
                 contact=request.POST.getlist('contact')[i],
                 email=request.POST.getlist('email')[i],

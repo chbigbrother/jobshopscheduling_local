@@ -21,10 +21,8 @@
                 <thead>
                     <tr>
                         <th>순번</th>
-                        <th>회사아이디</th>
                         <th>회사명</th>
-                        <th>기계대수</th>
-                        <th>제조섬유타입</th>
+                        <th>설비 호기</th>
                         <th style="text-align:center;">관리</th>
                     </tr>
                 </thead>
@@ -32,10 +30,8 @@
                     {% for comp in comp_list %}
                     <tr>
                         <td>{{forloop.counter}}</td>
-                        <td>{{comp.comp_id}}</td>
                         <td>{{comp.comp_name}}</td>
-                        <td>{{comp.facility_count}}</td>
-                        <td>{{comp.textile_type}}</td>
+                        <td>{{comp.facility_name}}</td>
                         <td style="text-align:center;">
                             <a href="" id="edit_{{ comp.id }}"><i class="far fa-edit {{ comp.id }}"></i></a>
                             <a href="" id="delete_{{ comp.id }}" style="margin-left:10px;"><i class="fas fa-trash-alt"></i></a>

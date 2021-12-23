@@ -127,7 +127,7 @@ def update_graph(request):
     orders = OrderList.objects.filter(sch_date=datetime.datetime.today().strftime("%Y%m%d"))
     textile_dict = {}
     order_list = []
-    comp_list = Information.objects.all()
+    comp_list = Facility.objects.all()
     comp_ids = []
     for ord in orders:
         order_list.append(ord.order_id)

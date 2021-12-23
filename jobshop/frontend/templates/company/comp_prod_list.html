@@ -39,9 +39,10 @@
                     <tr>
                         <th>순번</th>
                         <th>회사명</th>
+                        <th>작업호기</th>
                         <th>작업일자</th>
                         <th>작업종료일자</th>
-                        <th>작업호기</th>
+                        <th>고객요청기한</th>
                         <th>제품명</th>
                         <th>생산량(yd)</th>
                         <th>등록일시</th>
@@ -54,9 +55,10 @@
                     <tr>
                         <td>{{forloop.counter}}</td>
                         <td>{{comp.comp_name}}</td>
+                        <td>{{comp.facility_name}}</td>
                         <td>{{comp.work_date}}</td>
                         <td>{{comp.work_end_date}}</td>
-                        <td>{{comp.fac_code}}</td>
+                        <td>{{comp.comp_name}}</td>
                         <td>{{comp.prod_name}}</td>
                         <td>{{comp.prod_output}}</td>
                         <td>{{comp.created_at}}</td>

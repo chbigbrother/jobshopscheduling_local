@@ -3,19 +3,22 @@ from django.urls import reverse_lazy
 from django.http import HttpResponse
 from django.views.generic import ListView, CreateView, DetailView, UpdateView, DeleteView, TemplateView
 from django.http import JsonResponse
-from django.shortcuts import render
-from django.shortcuts import get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
+from django.utils.encoding import smart_str
 from openpyxl import load_workbook
 from fileutils.forms import FileUploadCsv
+from fileutils.models import FileUploadCsv as fileUploadCsv
 from .models import *
+from common.views import id_generate
 import pandas as pd
 import json, csv, datetime
+from urllib.parse import quote
 from datetime import timedelta
 
-
+# 설비정보등록 company Facility register HTML
 def home(request):
-    template_name = 'company/compregist.html'
-    comp_list = Information.objects.all()
+    template_name = 'company/comp_regist.html'
+    comp_list = Facility.objects.all()
     date = datetime.datetime.today() - timedelta(days=3)
     date = {
         "comp_list": comp_list,
@@ -23,85 +26,86 @@ def home(request):
         'path': '업체정보 / 설비정보등록'
     }
     return render(request, template_name, date)
-    # model = Company
-    # paginate_by = 5
-    # ordering = ['id']
 
-def delete(request):
-    if request.method == 'POST':
-        request = json.loads(request.body)
-        id = request['id']
-        company = get_object_or_404(Information, pk=id)
-        company.delete()
-        return HttpResponse(status=200)
-
-
-def comp_facility_view(request):
-    template_name = 'company/compfaclist.html'
-    comp_list = Information.objects.all()
-    date = datetime.datetime.today() - timedelta(days=3)
-    date = {
-        "comp_list": comp_list,
-        'dateFrom': date.strftime("%Y-%m-%d"),
-        'path': '업체정보 / 설비정보검색'
-    }
-
-    return render(request, template_name, date)
-
-
-def comp_daily_view(request):
-    template_name = 'company/compdailyproduction.html'
-    comp_list = Information.objects.all()
-    date = datetime.datetime.today() - timedelta(days=3)
-    date = {
-        "comp_list": comp_list,
-        'dateFrom': date.strftime("%Y-%m-%d"),
-        'path': '업체정보 / 실제가동현황'
-    }
-    
-    return render(request, template_name, date)
-
+# 설비정보검색 company Facility view HTML
 def comp_list_view(request):
-    template_name = 'company/compinfolist.html'
+    template_name = 'company/comp_fac_list.html'
     date = datetime.datetime.today() - timedelta(days=3)
-    comp_list = Information.objects.all()
+    comp_list = Facility.objects.filter(comp_id=request.user.groups.values('id')[0]['id'])
+
     result_list = []
     for i in range(len(comp_list.values())):
+        # comp_name = Information.objects.get(comp_id=comp_list[i].comp_id)
+        comp_name = comp_list[i].comp_id.comp_name # comp_name.name
         result = {}
-        if len(comp_list[i].textile_type.split(',')) > 1:
-            k_textile = ''
-            w_textile = ''
-            textile = ''
-            if comp_list[i].textile_type.split(',')[0] == 'weave':
-                w_textile = '제직'
-            if comp_list[i].textile_type.split(',')[1] == 'weave':
-                w_textile = '제직'
-            if comp_list[i].textile_type.split(',')[0] == 'knit':
-                k_textile = '편직'
-            if comp_list[i].textile_type.split(',')[1] == 'knit':
-                k_textile = '편직'
-            textile = str(w_textile) + ', ' + str(k_textile)
-        else:
-            if comp_list[i].textile_type.split(',')[0] == 'weave':
-                textile = '제직'
-            else:
-                textile = '편직'
-        result['comp_id'] = comp_list[i].comp_id
-        result['comp_name'] = comp_list[i].comp_name
-        result['facility_count'] = comp_list[i].facility_count
-        result['textile_type'] = textile
+        result['comp_name'] = comp_name
+        result['facility_name'] = comp_id = comp_list[i].facility_name
         result_list.append(result)
 
     date = {
         "comp_list": result_list,
         'dateFrom': date.strftime("%Y-%m-%d"),
-        'path': '업체정보 / 업체정보검색'
+        'path': '업체정보 / 설비정보검색'
     }
+    return render(request, template_name, date)
+
+# 설비현황검색 company production view HTML
+def comp_facility_view(request):
+    template_name = 'company/comp_prod_list.html'
+    comp_list = Facility.objects.all()
+    result_list = []
+    for i in range(len(comp_list.values())):
+        comp_name = comp_list[i].comp_id.comp_name  # comp_name.name
+        result = {}
+        result['comp_name'] = comp_name
+        result['facility_name'] = comp_id = comp_list[i].facility_name
+        result_list.append(result)
+
+    date = datetime.datetime.today() - timedelta(days=3)
+    date = {
+        "comp_list": result_list,
+        'dateFrom': date.strftime("%Y-%m-%d"),
+        'path': '업체정보 / 설비현황검색'
+    }
+
+    return render(request, template_name, date)
+
+def delete(request):
+    if request.method == 'POST':
+        request = json.loads(request.body)
+        id = request['id']
+        company = get_object_or_404(Facility, pk=id)
+        company.delete()
+        return HttpResponse(status=200)
+
+# 제품정보등록 company product register HTML
+def comp_product_regist(request):
+    template_name = 'company/comp_product_regist.html'
+    comp_list = Facility.objects.all()
+    date = datetime.datetime.today() - timedelta(days=3)
+    date = {
+        "comp_list": comp_list,
+        'dateFrom': date.strftime("%Y-%m-%d"),
+        'path': '업체정보 / 제품정보등록'
+    }
+
+    return render(request, template_name, date)
+
+# 제품정보검색 company product view HTML
+def comp_product_view(request):
+    template_name = 'company/comp_product_list.html'
+    comp_list = Product.objects.filter(comp_id=request.user.groups.values('id')[0]['id'])
+    date = datetime.datetime.today() - timedelta(days=3)
+    date = {
+        "comp_list": comp_list,
+        'dateFrom': date.strftime("%Y-%m-%d"),
+        'path': '업체정보 / 제품정보검색'
+    }
+    
     return render(request, template_name, date)
 
 # csv 파일 업로드
 def upload_file(request):
-
     if request.method == 'POST':
         form = FileUploadCsv(request.POST, request.FILES)
         if form.is_valid():
@@ -110,6 +114,190 @@ def upload_file(request):
     else:
         form = FileUploadCsv()
     return JsonResponse({"message": request.FILES})
+
+# Draw table after reading csv file
+def prod_read_csv(request):
+    readFile = fileUploadCsv.objects.all().order_by('id').last()
+
+    # request.FILES['file'];
+    read = pd.read_csv('./media/' + str(readFile.file), encoding='UTF8')
+    data_list = []
+
+    # 예외처리
+    # 1. 데이터 컬럼 일치하지 않을 때
+    for col in read.columns:
+        if '제품명' in col:
+            col = read[['제품명', 'rpm', '밀도', '일일생산량']]
+            for row in range(int(col.size / 4)):
+                data_dict = {}
+                data_dict['prod_name'] = str(col.loc[[row], ['제품명']].values).replace('[', '').replace(']', '').replace("'", '')
+                data_dict['density'] = str(col.loc[[row], ['밀도']].values).replace('[', '').replace(']', '').replace("'", '')
+                data_dict['rpm'] = str(col.loc[[row], ['rpm']].values).replace('[', '').replace(']', '').replace("'", '')
+                data_dict['daily_prod_rate'] = str(col.loc[[row], ['일일생산량']].values).replace('[', '').replace(']', '').replace("'", '')
+                data_list.append(data_dict)
+    def json_default(value):
+        if isinstance(value, datetime.date):
+            return value.strftime('%Y-%m-%d')
+        raise TypeError('not JSON serializable')
+
+    return HttpResponse(json.dumps(data_list, default=json_default, ensure_ascii=False), content_type="application/json")
+
+def prod_csv_download(request):
+    filename = request.user.groups.values('name')[0]['name'] + "_제품정보.csv"
+
+    # response content type
+    response = HttpResponse(
+        content_type='text/csv',
+        headers={'Content-Disposition': "attachment;filename*=UTF-8''{}".format(quote(filename.encode('utf-8')))},
+    )
+
+    writer = csv.writer(response, csv.excel)
+    response.write(u'\ufeff'.encode('utf8'))
+
+    # write the headers
+    writer.writerow([
+        smart_str(u"제품명"),
+        smart_str(u"rpm"),
+        smart_str(u"밀도"),
+        smart_str(u"일일생산량"),
+    ])
+    # get data from database or from text file....
+    products = Product.objects.filter(comp_id=request.user.groups.values('id')[0]['id'])
+    if not products:
+        return response
+    else:
+        for product in products:
+            writer.writerow([
+                smart_str(product.prod_name),
+                smart_str(product.rpm),
+                smart_str(product.density),
+                smart_str(product.daily_prod_rate),
+            ])
+
+    return response
+
+# 제품문서양식다운로드
+def prod_csv_download_blank(request):
+    filename = request.user.groups.values('name')[0]['name'] + "_제품정보.csv"
+
+    # response content type
+    response = HttpResponse(
+        content_type='text/csv',
+        headers={'Content-Disposition': "attachment;filename*=UTF-8''{}".format(quote(filename.encode('utf-8')))},
+    )
+
+    writer = csv.writer(response, csv.excel)
+    response.write(u'\ufeff'.encode('utf8'))
+
+    # write the headers
+    writer.writerow([
+        smart_str(u"제품명"),
+        smart_str(u"rpm"),
+        smart_str(u"밀도"),
+        smart_str(u"일일생산량"),
+    ])
+    return response
+
+# Save data into the Database by reading csv file
+def comp_prod_update_csv(request):
+    if request.method == 'POST':
+        for i in range(len(request.POST.getlist('prod_name'))):
+            # id generator
+            id_count = Product.objects.all().order_by('prod_id').last()
+            if id_count is None or not id_count:
+                int_id = 0
+            else:
+                int_id = id_count.prod_id[3:]
+            str_id = id_generate('PRD', int_id)
+            Product.objects.create(
+                prod_id=str_id,
+                comp_id=Information.objects.get(comp_id=request.user.groups.values('id')[0]['id']),
+                prod_name=request.POST.getlist('prod_name')[i],
+                density=request.POST.getlist('density')[i],
+                rpm=request.POST.getlist('rpm')[i],
+                daily_prod_rate=request.POST.getlist('daily_prod_rate')[i]
+            )
+
+    return redirect("/company/product/search/")
+
+# Draw table after reading csv file
+def comp_read_csv(request):
+    readFile = fileUploadCsv.objects.all().order_by('id').last()
+
+    # readFile = request.FILES['file'];
+    read = pd.read_csv('./media/' + str(readFile.file), encoding='UTF8')
+    data_list = []
+
+    # 예외처리
+    # 1. 데이터 컬럼 일치하지 않을 때
+    for col in read.columns:
+        if '호기명' in col:
+            col = read[['호기명']]
+            for row in range(int(col.size)):
+                data_dict = {}
+                data_dict['facility_name'] = str(col.loc[[row], ['호기명']].values).replace('[', '').replace(']', '').replace("'", '')
+                data_list.append(data_dict)
+    def json_default(value):
+        if isinstance(value, datetime.date):
+            return value.strftime('%Y-%m-%d')
+        raise TypeError('not JSON serializable')
+
+    return HttpResponse(json.dumps(data_list, default=json_default, ensure_ascii=False), content_type="application/json")
+
+
+
+# 설비문서양식다운로드
+def comp_csv_download_blank(request):
+    filename = request.user.groups.values('name')[0]['name'] + "_설비정보.csv"
+
+    # response content type
+    response = HttpResponse(
+        content_type='text/csv',
+        headers={'Content-Disposition': "attachment;filename*=UTF-8''{}".format(quote(filename.encode('utf-8')))},
+    )
+
+    writer = csv.writer(response, csv.excel)
+    response.write(u'\ufeff'.encode('utf8'))
+
+    # write the headers
+    writer.writerow([
+        smart_str(u"호기명"),
+    ])
+    return response
+
+def comp_csv_download(request):
+    filename = request.user.groups.values('name')[0]['name'] + "_제품정보.csv"
+
+    # response content type
+    response = HttpResponse(
+        content_type='text/csv',
+        headers={'Content-Disposition': "attachment;filename*=UTF-8''{}".format(quote(filename.encode('utf-8')))},
+    )
+
+    writer = csv.writer(response, csv.excel)
+    response.write(u'\ufeff'.encode('utf8'))
+
+    # write the headers
+    writer.writerow([
+        smart_str(u"제품명"),
+        smart_str(u"rpm"),
+        smart_str(u"밀도"),
+        smart_str(u"일일생산량"),
+    ])
+    # get data from database or from text file....
+    products = Product.objects.filter(comp_id=request.user.groups.values('id')[0]['id'])
+    if not products:
+        return response
+    else:
+        for product in products:
+            writer.writerow([
+                smart_str(product.prod_name),
+                smart_str(product.rpm),
+                smart_str(product.density),
+                smart_str(product.daily_prod_rate),
+            ])
+
+    return response
 
 
 # excel 파일 업로드
@@ -155,32 +343,41 @@ def comp_update_excel(request):
 
 # csv 파일 읽어서 데이터베이스에 저장
 def comp_update_csv(request):        # 파일객체가 하나도 없다면 작업을 멈추고 리턴합니다.
-    uploadFile = request.FILES['file'];
-    # read = pd.read_csv('./media/' + uploadFile.name, encoding='euc-kr')
-    read = pd.read_csv('./media/' + uploadFile.name, encoding='cp949')
+    if request.method == 'POST':
+        for i in range(len(request.POST.getlist('facility_name'))):
+            # id generator
+            str_id = 'FAC' + str(request.user.groups.values('id')[0]['id']) + '#' + request.POST.getlist('facility_name')[i].replace("호기", "")
+            Facility.objects.create(
+                facility_id=str_id,
+                facility_name=request.POST.getlist('facility_name')[i].replace("호기", ""),
+                comp_id=Information.objects.get(comp_id=request.user.groups.values('id')[0]['id'])
+            )
 
-    # 예외처리
-    # 1. 데이터 컬럼 일치하지 않을 때
-    for col in read.columns: # 작업일자        회사명  작업 호기       제품명  RPM     가동시간(HHMM)  운행시간(HHMM)  생산량(yd)      가동율  작업종료일자
-        if '작업일자' in col and '회사명' in col and '작업 호기' in col:
-            col = read[['작업일자', '회사명', '작업 호기', '제품명', 'RPM', '가동시간(HHMM)', '운행시간(HHMM)', '생산량(yd)', '가동율', '작업종료일자']]
-            for row in range(int(col.size / 10)):
-                Information.objects.create(
-                    comp_name=str(col.loc[[row], ['회사명']].values).replace('[', '').replace(']', '').replace("'", ''),
-                    work_date=str(col.loc[[row], ['작업일자']].values).replace('[', '').replace(']', '').replace("'", ''),
-                    work_end_date=str(col.loc[[row], ['작업종료일자']].values).replace('[', '').replace(']', '').replace("'", ''),
-                    fac_code=str(col.loc[[row], ['작업 호기']].values).replace('[', '').replace(']', '').replace("'", ''),
-                    prod_name=str(col.loc[[row], ['제품명']].values).replace('[', '').replace(']', '').replace("'", ''),
-                    rpm=str(col.loc[[row], ['RPM']].values).replace('[', '').replace(']', '').replace("'", ''),
-                    uptime=str(col.loc[[row], ['가동시간(HHMM)']].values).replace('[', '').replace(']', '').replace("'", ''),
-                    running_time=str(col.loc[[row], ['운행시간(HHMM)']].values).replace('[', '').replace(']', '').replace("'", ''),
-                    prod_output=str(col.loc[[row], ['생산량(yd)']].values).replace('[', '').replace(']', '').replace("'",  ''),
-                    prod_rate=str(col.loc[[row], ['가동율']].values).replace('[', '').replace(']', '').replace("'", '')
-                )
-                print('CATEGORY DATA UPLOADED SUCCESSFULY!')
-            return JsonResponse({"message": 'success'})
-        else:
-            return JsonResponse({"message": 'error'})
+    return redirect("/company/info/list/")
+
+# 해당 일자 작업 가능한 기계 조회
+def comp_avail_facility(request):        # 파일객체가 하나도 없다면 작업을 멈추고 리턴합니다.
+
+    for i in request.GET:
+        request = json.loads(i)
+
+    if request['strDate'] != None:
+        strDate = request['strDate'].replace('-', '')
+        order_list = Schedule.objects.filter(work_end_date__lte=strDate)
+    else:
+        order_list = Schedule.objects.filter(work_end_date__lte=datetime.datetime.today().strftime("%Y%m%d"))
+
+    fac_list = Facility.objects.all()
+    result_list = []
+    if len(order_list) > 0:
+        for i in fac_list:
+            for j in order_list:
+                if i.facility_id == j.facility_id.facility_id:
+                    continue;
+                else:
+                    result_list.append(i.facility_name)
+
+    return JsonResponse(result_list, safe=False)
 
 
 

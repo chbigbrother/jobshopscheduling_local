@@ -39,5 +39,5 @@ def footer(request):
 
 # compregist
 def company(request):
-    return render(request, 'company/compregist.html')
+    return render(request, 'company/comp_regist.html')
 

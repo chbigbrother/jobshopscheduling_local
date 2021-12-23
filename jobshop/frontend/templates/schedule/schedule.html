@@ -13,7 +13,7 @@
                                 <label>주문일자</label>
                             </div>
                             <div class="col-lg-3 col-md-4 pknu-searchDate-dd" >
-                                 <input class="form-control text-center" type="text" name="dateFrom" id="dateFrom" />
+                                 <input class="form-control text-center" type="text" value="{{ dateFrom }}" name="dateFrom" id="dateFrom" />
                             </div>
                             <div class="col-lg-1 col-md-1 pknu-searchDate-dd">~</div>
                             <div class="col-lg-3 col-md-4 pknu-searchDate-dd" style="margin-right:0.4rem;">
@@ -106,8 +106,8 @@
 
 <!-- ***************************************************************** activationSettingModal ***************************************************************** -->
 <!-- setting.txt 정보 입력 Modal START -->
-<!--<div class="modal fade" id="activationSettingModal"tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
+<div class="modal fade" id="activationSettingModal"tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog2" role="document">
         <div class="modal-content">
             <div class="modal-header">
                     <h4 class="modal-title" id="exampleModalLabel">작업 스케줄링 설정</h4>
@@ -116,119 +116,38 @@
                     </button>
                 </div>
             <div class="modal-body">
-                <div class="row pknu-modal-row" style="height:0.6rem;">
-                    <div class="col-md-3"><label for="ordDateFrom" class="pt-2">시작일자</label></div>
-                    <div class="col-md-6">
-                         <input type="text" class="form-control" id="ordDateFrom" aria-describedby="emailHelp" placeholder="" value="" readonly="readonly" />
-                    </div>
-                </div>
                 <div class="row pknu-modal-row">
-                    <div class="col-md-3"><label for="ordDateTo" class="pt-2">종료일자</label></div>
-                    <div class="col-md-6">
+                    <div class="col-md-3"><label for="ordDateFrom" class="pt-2">주문조회일자</label></div>
+                    <div class="col-md-3">
+                         <input type="text" class="form-control" id="ordDateFrom" aria-describedby="emailHelp" placeholder="" value="{{ dateFrom }}" readonly="readonly" />
+                    </div>
+                    ~
+                    <div class="col-md-3">
                          <input type="text" class="form-control" id="ordDateTo" aria-describedby="emailHelp" placeholder="" value="" readonly="readonly" />
                     </div>
                 </div>
-                <div class="row pknu-modal-row">
-                    <div class="col-md-3"><label for="selectOrder" class="pt-2">주문선택</label></div>
-                    <div class="col-md-6">
-                        <select class="form-control" name="select" multiple="multiple" id="selectOrder">
-                            <option value="DZ1000">DZ1000  수량: 2000yd</option>
-                            <option value="DZ2000">DZ2000  수량: 3000yd</option>
-                            <option value="DZ3000">DZ3000  수량: 4000yd</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="row pknu-modal-row">
-                    <div class="col-md-3"><label for="selectOrder" class="pt-2" style="font-size:0.95rem;">사용 가능 기계대수</label></div>
-                    <div class="col-md-6">
-                         <input class="form-control text-center" type="text" id="availfacnum" />
-                    </div>
-                </div>
-                <div class="row pknu-modal-row">
-                    <div class="col-md-3"><label for="selectOrder" class="pt-2" style="font-size:0.95rem;">rpm</label></div>
-                    <div class="col-md-6">
-                         <input class="form-control text-center" type="text" id="rpm" />
-                    </div>
-                </div>
-                <div class="row pknu-modal-row">
-                    <div class="col-lg-11" id="scheduletable" style="overflow:scroll;">
-                        <table class="pknu-table table-bordered" id="dataTable" width="100%" cellspacing="0">
 
-                        </table>
-                    </div>
-                </div>
                 <div class="row pknu-modal-row">
-                    <div class="col-lg-11" id="processingtable" style="overflow:scroll;">
-                        <table class="pknu-table table-bordered" id="processingdataTable" width="100%" cellspacing="0">
+                    <div class="col-md-3"><label class="pt-2">주문선택</label></div>
+                    <div class="col-md-6" id="divSelectOrder">
+                        <!-- <select class="form-control" name="select" multiple="multiple" id="selectOrder">
 
-                        </table>
+                        </select> -->
                     </div>
                 </div>
                 <div class="row pknu-modal-row">
-                    <div class="col-md-3"><label for="selectOrder" class="pt-2" style="font-size:0.95rem;">작업기한설정</label></div>
+                    <div class="col-md-3"><label for="strDate" class="pt-2" style="font-size:0.95rem;">작업시작일자</label></div>
                     <div class="col-lg-6" >
-                         <input class="form-control text-center" type="text" name="dateFrom" id="estDate" />
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer" id="htfooter">
-                <button type="button" class="d-none d-sm-inline-block btn btn-sm btn-danger shadow-sm" data-dismiss="modal">
-                    <i class="far fa-window-close fa-sm text-white-50"></i> 취소
-                </button>
-                <a href="#" onclick="activate()" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
-                    <i class="far fa-paper-plane fa-sm text-white-50"></i> 스케쥴 실행
-                </a>
-            </div>
-        </div>
-    </div>
-</div>-->
-<!-- config.txt 정보 입력 Modal END -->
-<div class="modal fade" id="activationSettingModal"tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                    <h4 class="modal-title" id="exampleModalLabel">JSS Setting</h4>
-                    <button class="close" type="button" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">×</span>
-                    </button>
-                </div>
-            <div class="modal-body">
-                <div class="row pknu-modal-row" style="height:0.6rem;">
-                    <div class="col-md-3"><label for="ordDateFrom" class="pt-2">Start date</label></div>
-                    <div class="col-md-6">
-                         <input type="text" class="form-control" id="ordDateFrom" aria-describedby="emailHelp" placeholder="" value="" readonly="readonly" />
+                         <input class="form-control text-center" type="text" name="dateFrom" id="strDate" />
                     </div>
                 </div>
                 <div class="row pknu-modal-row">
-                    <div class="col-md-3"><label for="ordDateTo" class="pt-2">End date</label></div>
-                    <div class="col-md-6">
-                         <input type="text" class="form-control" id="ordDateTo" aria-describedby="emailHelp" placeholder="" value="" readonly="readonly" />
+                    <div class="col-md-3"><label class="pt-2" style="font-size:0.95rem;">사용 가능 기계</label></div>
+                    <div class="col-md-6" id="divSelectFac">
+
                     </div>
                 </div>
-                <div class="row pknu-modal-row">
-                    <div class="col-md-3"><label for="selectOrder" class="pt-2">order #</label></div>
-                    <div class="col-md-6">
-                        <select class="form-control" name="select" multiple="multiple" id="selectOrder">
-                            <option value="DZ1000">DZ1000  수량: 2000yd</option>
-                            <option value="DZ2000">DZ2000  수량: 3000yd</option>
-                            <option value="DZ3000">DZ3000  수량: 4000yd</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="row pknu-modal-row">
-                    <div class="col-md-3"><label for="selectOrder" class="pt-2" style="font-size:0.95rem;">machine #</label></div>
-                    <div class="col-md-6">
-                         <input class="form-control text-center" type="text" id="availfacnum" />
-                    </div>
-                </div>
-                <div class="row pknu-modal-row">
-                    <div class="col-md-3"><label for="selectOrder" class="pt-2" style="font-size:0.95rem;">rpm</label></div>
-                    <div class="col-md-6">
-                         <input class="form-control text-center" type="text" id="rpm" />
-                    </div>
-                </div>
-                <div class="row pknu-modal-row">
-                    <div class="col-md-3"><label for="selectOrder" class="pt-2" style="font-size:0.95rem;">job order</label></div>
+                <!--<div class="row pknu-modal-row">
                     <div class="col-lg-11" id="scheduletable" style="overflow:scroll;">
                         <table class="pknu-table table-bordered" id="dataTable" width="100%" cellspacing="0">
 
@@ -236,15 +155,14 @@
                     </div>
                 </div>
                 <div class="row pknu-modal-row">
-                    <div class="col-md-3"><label for="selectOrder" class="pt-2" style="font-size:0.95rem;">processing time</label></div>
                     <div class="col-lg-11" id="processingtable" style="overflow:scroll;">
                         <table class="pknu-table table-bordered" id="processingdataTable" width="100%" cellspacing="0">
 
                         </table>
                     </div>
-                </div>
+                </div>-->
                 <div class="row pknu-modal-row">
-                    <div class="col-md-3"><label for="selectOrder" class="pt-2" style="font-size:0.95rem;">작업기한설정</label></div>
+                    <div class="col-md-3"><label for="estDate" class="pt-2" style="font-size:0.95rem;">작업기한설정</label></div>
                     <div class="col-lg-6" >
                          <input class="form-control text-center" type="text" name="dateFrom" id="estDate" />
                     </div>
@@ -261,6 +179,7 @@
         </div>
     </div>
 </div>
+<!-- config.txt 정보 입력 Modal END -->
 
 <!-- Scroll to Top Button-->
 <a class="scroll-to-top rounded" href="#page-top">
@@ -354,7 +273,118 @@
     }
 
     $(function(){
+        const today = moment();
+        // 검색 날짜 init
+        flatpickr("#dateTo, #estDate, #strDate, #ordDateTo", {
+               locale: Flatpickr.l10ns.ko,
+               enableTime: false,
+               dateFormat: "Y-m-d",
+               disableMobile: true,
+               defaultDate: [today.format('YYYY-MM-DD')]
+        });
+        // 검색 날짜 init
+        flatpickr("#dateFrom, #ordDateFrom", {
+               locale: Flatpickr.l10ns.ko,
+               enableTime: false,
+               dateFormat: "Y-m-d",
+               disableMobile: true,
+               defaultDate: $("#dateFrom").val()
+        });
+        $(document).ready(function(){
+            orderDraw();
+            facilityDraw();
+        })
         $('#activationSettingModal').modal('show');
+
+        // 주문일자에 따른 수주 리스트 불러오기 START
+        $('#ordDateFrom').on('change', function(){ orderDraw(); });
+        $('#ordDateTo').on('change', function(){ orderDraw(); });
+
+        var result_data;
+        function orderSearch(from, to){
+            from = from.replace('-', '').replace('-', '');
+            to = to.replace('-', '').replace('-', '');
+            var obj = new Object();
+            obj.dateFrom = from;
+            obj.dateTo = to;
+            $.ajax({
+                url: "{% url 'order.order_list_search' %}",
+                method:'GET',
+                dataType: 'json',
+                async:false,
+                data: JSON.stringify(obj),
+                contentType: 'application/json',
+                processData: false,
+                success: function(result){
+                    result_data = result;
+                }
+
+            });
+            return result_data;
+        }
+
+        function orderDraw(){
+            $('#selectOrder').html('');
+            var result = orderSearch($('#ordDateFrom').val(), $('#ordDateTo').val());
+            if(result.length>1){
+                var innerHTML = '<select class="form-control" name="select" multiple="multiple" id="selectOrder" style="width:257px;">';
+                for(var i=0; i<result.length; i++){
+                    if(typeof result[i] !== 'undefined'){
+                        innerHTML += '<option value="' + result[i].order_id + '">' + result[i].prod_id_id + ' 수량: ' + result[i].amount + ' yd</option>';
+                    }
+                }
+            } else {
+                var innerHTML = '<input type="text" class="form-control" placeholder="해당일에 주문데이터가 없습니다." value="" readonly="readonly" />';
+            }
+            $('#divSelectOrder').html(innerHTML);
+            $("#selectOrder").multipleSelect({
+                filter: true
+            });
+            return;
+        }
+        // 주문일자에 따른 수주 리스트 불러오기 END
+
+
+        // 작업 시작 일자에 따른 사용 가능 기계 리스트 불러오기 START
+        function facilityDraw(){
+            var obj = new Object();
+            obj.strDate = $("#strDate").val();
+            $.ajax({
+                url: "{% url 'company.comp_avail_facility' %}",
+                method:'GET',
+                dataType: 'json',
+                async:false,
+                data: JSON.stringify(obj),
+                contentType: 'application/json',
+                processData: false,
+                success: function(result){
+                    if(result.length>1){
+                        var innerHTML = '<select class="form-control" name="select" multiple="multiple" id="availfacnum" style="width:257px;">';
+                        for(var i=0; i<result.length; i++){
+                            if(typeof result[i] !== 'undefined'){
+                                innerHTML += '<option value="' + result[i] + '">' + result[i] + ' 호기</option>';
+                            }
+                        }
+                    } else {
+                        var innerHTML = '<input type="text" class="form-control" placeholder="사용가능한 설비가 없습니다." value="" readonly="readonly" />';
+                    }
+                    $('#divSelectFac').html(innerHTML);
+                    $("#availfacnum").multipleSelect({
+                        filter: true
+                    });
+                }
+
+            });
+            return;
+        }
+
+
+
+
+
+        // 작업 시작 일자에 따른 사용 가능 기계 리스트 불러오기 END
+
+
         $('#availfacnum').on('change', function(){
             var facnum = $('#availfacnum').val();
             var order = $('#selectOrder').val();
@@ -379,22 +409,6 @@
         })
 
 
-
-
-
-        $("#selectOrder").multipleSelect({
-            filter: true
-        });
-
-        const today = moment();
-        // 검색 날짜 init
-        flatpickr("#dateFrom, #dateTo, #estDate, #ordDateFrom, #ordDateTo", {
-               locale: Flatpickr.l10ns.ko,
-               enableTime: false,
-               dateFormat: "Y-m-d",
-               disableMobile: true,
-               defaultDate: [today.format('YYYY-MM-DD')]
-        });
 
         var ctx = document.getElementById("myAreaChart");
         var chartset = false;

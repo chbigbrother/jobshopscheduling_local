@@ -3611,7 +3611,7 @@ Docs & License: https://fullcalendar.io/
     }
 
     /*
-    Records offset information for a set of elements, relative to an origin element.
+    Records offset Facility for a set of elements, relative to an origin element.
     Can record the left/right OR the top/bottom OR both.
     Provides methods for querying the cache by position.
     */

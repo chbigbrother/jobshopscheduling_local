@@ -7,9 +7,7 @@ class OrderList(models.Model):
     cust_name = models.CharField(max_length=50, null=False)  # 고객 아이디
     sch_date = models.CharField(max_length=12, null=False) # 오더 일자
     exp_date = models.CharField(max_length=12, null=False) # 작업완료기한
-    textile_type = models.CharField(max_length=120) # 소재 유형
-    textile_name = models.CharField(max_length=120)  # 소재 이름
-    density = models.FloatField(null=True)  # 밀도
+    prod_id = models.ForeignKey("company.Product", on_delete=models.CASCADE, db_column="prod_id")
     amount = models.FloatField(null=False) # 오더 수량
     contact = models.CharField(max_length=120)  # 연락처
     email = models.CharField(max_length=120)  # 이메일

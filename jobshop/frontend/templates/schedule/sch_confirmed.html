@@ -41,6 +41,53 @@
 
     </div>
 </div>
+
+<!-- **************************  modal start  ************************** -->
+<div class="modal fade" id="activationSettingModal"tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                    <h4 class="modal-title" id="exampleModalLabel">JSS Setting</h4>
+                    <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                </div>
+            <div class="modal-body">
+                <div class="row pknu-modal-row" >
+                    <div class="col-md-3"><label for="schExeDate" class="pt-2">스케쥴일자</label></div>
+                    <div class="col-md-6">
+                         <input type="text" class="form-control" id="schExeDate" aria-describedby="emailHelp" placeholder="" value="" readonly="readonly" />
+                    </div>
+                </div>
+                <div class="row pknu-modal-row">
+                    <div class="col-md-3"><label for="workStartDate" class="pt-2">작업시작일</label></div>
+                    <div class="col-md-6">
+                         <input type="text" class="form-control" id="workStartDate" aria-describedby="emailHelp" placeholder="" value="" readonly="readonly" />
+                    </div>
+                </div>
+                <div class="row pknu-modal-row">
+                    <div class="col-md-3"><label for="workEndDate" class="pt-2">작업기한</label></div>
+                    <div class="col-md-6">
+                         <input type="text" class="form-control" id="workEndDate" aria-describedby="emailHelp" placeholder="" value="" readonly="readonly" />
+                    </div>
+                </div>
+                <div class="row pknu-modal-row">
+                    <div class="col-md-3"><label for="orderId" class="pt-2" style="font-size:0.95rem;">오더번호</label></div>
+                    <div class="col-lg-6" >
+                         <input class="form-control text-center" type="text" name="dateFrom" id="orderId" readonly="readonly"/>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" id="htfooter">
+                <button type="button" class="d-none d-sm-inline-block btn btn-sm btn-danger shadow-sm" data-dismiss="modal">
+                    <i class="far fa-window-close fa-sm text-white-50"></i> 취소
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- **************************  modal end  ************************** -->
+
 <script>
 $(function(){
     const today = moment();
@@ -108,6 +155,24 @@ $(function(){
           start: '2021-12-28'
         }
       ],
+      eventClick: function(info) {
+        var data = info.event.title
+        $.ajax({
+            url:'',
+            method:'GET',
+            success: function(result){
+                console.log(result);
+                $('#activationSettingModal').modal('show');
+                $('.modal-title').text(info.event.title);
+            },
+        });
+        // alert('Event: ' + info.event.title);
+        // alert('Coordinates: ' + info.jsEvent.pageX + ',' + info.jsEvent.pageY);
+        // alert('View: ' + info.view.type);
+
+        // change the border color just for fun
+        // info.el.style.borderColor = '#fcba03';
+      }
       // eventColor: ['#378006', '#f00', '#ff0000', 'rgb(255,0,0)', 'red']
     });
 
