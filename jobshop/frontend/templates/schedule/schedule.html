@@ -35,7 +35,7 @@
             <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
                 <h6 class="m-0 font-weight-bold text-primary">스케줄 이력 차트 </h6>
                 <div class="dropdown no-arrow">
-                    <a href="#" onclick="activationSetting()" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
+                    <a href="#" id="activationSetting" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
                         <i class="fas fa-download fa-sm text-white-50"></i> 섬유 공정 스케쥴 실행
                     </a>
                 </div>
@@ -106,7 +106,7 @@
 
 <!-- ***************************************************************** activationSettingModal ***************************************************************** -->
 <!-- setting.txt 정보 입력 Modal START -->
-<div class="modal fade" id="activationSettingModal"tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+<div class="modal fade" id="activationSettingModal" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true" data-backdrop="static">
     <div class="modal-dialog modal-dialog2" role="document">
         <div class="modal-content">
             <div class="modal-header">
@@ -257,10 +257,7 @@
             }
         });
     }
-    // 섬유공정스케줄실행 클릭 시 이벤트
-    function activationSetting(){
-        $('#activationSettingModal').modal('show');
-    }
+
     // 섬유공정스케줄실행 클릭 시 이벤트
     function activate(){
         $('#css-loader').addClass("is-active");
@@ -275,7 +272,7 @@
     $(function(){
         const today = moment();
         // 검색 날짜 init
-        flatpickr("#dateTo, #estDate, #strDate, #ordDateTo", {
+        flatpickr("#dateTo", {
                locale: Flatpickr.l10ns.ko,
                enableTime: false,
                dateFormat: "Y-m-d",
@@ -283,19 +280,44 @@
                defaultDate: [today.format('YYYY-MM-DD')]
         });
         // 검색 날짜 init
-        flatpickr("#dateFrom, #ordDateFrom", {
+        flatpickr("#dateFrom", {
                locale: Flatpickr.l10ns.ko,
                enableTime: false,
                dateFormat: "Y-m-d",
                disableMobile: true,
                defaultDate: $("#dateFrom").val()
         });
+
         $(document).ready(function(){
+            $('#activationSettingModal').modal({backdrop: 'static', keyboard: false})
+            $('#activationSettingModal').modal('show');
+
+            const today = moment();
+            // 검색 날짜 init
+            flatpickr("#estDate, #strDate, #ordDateTo", {
+                   locale: Flatpickr.l10ns.ko,
+                   enableTime: false,
+                   dateFormat: "Y-m-d",
+                   disableMobile: true,
+                   defaultDate: [today.format('YYYY-MM-DD')]
+            });
+            // 검색 날짜 init
+            flatpickr("#ordDateFrom", {
+                   locale: Flatpickr.l10ns.ko,
+                   enableTime: false,
+                   dateFormat: "Y-m-d",
+                   disableMobile: true,
+                   defaultDate: $("#dateFrom").val()
+            });
             orderDraw();
             facilityDraw();
         })
-        $('#activationSettingModal').modal('show');
+        // 섬유공정스케줄실행 클릭 시 이벤트
+        $('#activationSetting').on('click', function(){
 
+
+
+        });
         // 주문일자에 따른 수주 리스트 불러오기 START
         $('#ordDateFrom').on('change', function(){ orderDraw(); });
         $('#ordDateTo').on('change', function(){ orderDraw(); });
@@ -325,12 +347,13 @@
 
         function orderDraw(){
             $('#selectOrder').html('');
+            console.log($('#ordDateTo').val());
             var result = orderSearch($('#ordDateFrom').val(), $('#ordDateTo').val());
             if(result.length>1){
                 var innerHTML = '<select class="form-control" name="select" multiple="multiple" id="selectOrder" style="width:257px;">';
                 for(var i=0; i<result.length; i++){
                     if(typeof result[i] !== 'undefined'){
-                        innerHTML += '<option value="' + result[i].order_id + '">' + result[i].prod_id_id + ' 수량: ' + result[i].amount + ' yd</option>';
+                        innerHTML += '<option value="' + result[i].order_id + '">' + result[i].prod_name + ' 수량: ' + result[i].amount + ' yd</option>';
                     }
                 }
             } else {
@@ -347,6 +370,7 @@
 
         // 작업 시작 일자에 따른 사용 가능 기계 리스트 불러오기 START
         function facilityDraw(){
+            $('#divSelectFac').html('');
             var obj = new Object();
             obj.strDate = $("#strDate").val();
             $.ajax({
@@ -379,11 +403,10 @@
         }
 
 
-
-
-
         // 작업 시작 일자에 따른 사용 가능 기계 리스트 불러오기 END
-
+        $("#strDate").on('change', function(){
+            facilityDraw();
+        });
 
         $('#availfacnum').on('change', function(){
             var facnum = $('#availfacnum').val();

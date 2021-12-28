@@ -356,29 +356,39 @@ def comp_update_csv(request):        # 파일객체가 하나도 없다면 작�
     return redirect("/company/info/list/")
 
 # 해당 일자 작업 가능한 기계 조회
-def comp_avail_facility(request):        # 파일객체가 하나도 없다면 작업을 멈추고 리턴합니다.
+def comp_avail_facility(request):
 
     for i in request.GET:
         request = json.loads(i)
 
     if request['strDate'] != None:
         strDate = request['strDate'].replace('-', '')
-        order_list = Schedule.objects.filter(work_end_date__lte=strDate)
+        order_list = Schedule.objects.filter(work_end_date__gt=strDate)
     else:
-        order_list = Schedule.objects.filter(work_end_date__lte=datetime.datetime.today().strftime("%Y%m%d"))
+        order_list = Schedule.objects.filter(work_end_date__gt=datetime.datetime.today().strftime("%Y%m%d"))
 
     fac_list = Facility.objects.all()
     result_list = []
+    duplicate = []
     if len(order_list) > 0:
         for i in fac_list:
             for j in order_list:
                 if i.facility_id == j.facility_id.facility_id:
                     continue;
                 else:
-                    result_list.append(i.facility_name)
+                    result_list.append(i.facility_id)
+        result = []
+        final_list = []
+        for i in result_list:
+            if i in result:
+                final_list.append(i)
+            if i not in result:
+                result.append(i)
+    else:
+        final_list = []
+        for i in fac_list:
+            final_list.append(i.facility_id)
 
-    return JsonResponse(result_list, safe=False)
 
 
-
-
+    return JsonResponse(final_list, safe=False)

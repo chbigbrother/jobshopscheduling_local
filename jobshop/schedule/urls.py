@@ -8,6 +8,7 @@ urlpatterns = [
     path('', home, name='schedule.index'),
     path('history/', history, name='schedule.history'),
     path('confirmed/', sch_confirmed, name='schedule.sch_confirmed'),
+    path('confirmed/monthly/', monthly_confirmed_order, name='schedule.monthly_confirmed_order'),
     path('history/chart/<str:id>/', history_chart, name='schedule.history_chart'),
     path('graph/update/', update_graph, name='update_graph'),
     path('graph/draw/', draw_graph, name='draw_graph'),

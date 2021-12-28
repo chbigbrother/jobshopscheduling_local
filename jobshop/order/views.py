@@ -60,21 +60,53 @@ def order_list_query(request):
     return sch_date_from.strftime("%Y-%m-%d"), sch_date_to.strftime("%Y-%m-%d"), order_list
 
 def order_list_search(request):
-
     date = datetime.datetime.today() - timedelta(days=3)
     for i in request.GET:
         request = json.loads(i)
+    order_list_result = []
 
     if request['dateFrom'] != None:
         date_from = request['dateFrom'].replace('-', '')
         date_to = request['dateTo'].replace('-', '')
 
         order_list = OrderList.objects.filter(sch_date__gte=date_from).filter(sch_date__lte=date_to)
+        order_list = OrderList.objects.raw(
+            "SELECT order_id, prod_id, SUM(amount) as amount " +
+            "FROM order_orderlist " +
+            "WHERE sch_date >= '" + date_from + "' AND " +
+            "sch_date <= '" + date_to + "'" +
+            "GROUP BY prod_id")
+        for i in order_list:
+            product_dict = {}
+            product = Product.objects.get(prod_id=i.prod_id.prod_id)
+            product_name = product.prod_name
+            product_dict['order_id'] = i.order_id
+            product_dict['prod_name'] = product_name
+            product_dict['amount'] = int(i.amount)
+            order_list_result.append(product_dict)
     else:
-        order_list = OrderList.objects.filter(sch_date__gte=date.strftime("%Y%m%d"),
-                                              sch_date__lte=datetime.datetime.today().strftime("%Y%m%d"))
+        order_list = OrderList.objects.raw(
+            "SELECT order_id, prod_id, SUM(amount) as amount " +
+            "FROM order_orderlist " +
+            "WHERE sch_date >= '" + date.strftime("%Y%m%d") + "' AND " +
+            "sch_date <= '" + datetime.datetime.today().strftime("%Y%m%d") + "'" +
+            "GROUP BY prod_id")
+        for i in order_list:
+            product_dict = {}
+            product = Product.objects.get(prod_id=i.prod_id.prod_id)
+            product_name = product.prod_name
+            product_dict['order_id'] = i.order_id
+            product_dict['prod_name'] = product_name
+            product_dict['amount'] = int(i.amount)
+            order_list_result.append(product_dict)
 
-    return JsonResponse(list(order_list.values()), safe=False)
+    def json_default(value):
+        if isinstance(value, datetime.date):
+            return value.strftime('%Y-%m-%d')
+        raise TypeError('not JSON serializable')
+
+    return HttpResponse(json.dumps(order_list_result, default=json_default, ensure_ascii=False), content_type="application/json")
+    # return JsonResponse(list(order_list_result.values()), safe=False)
 
 def fixed_order(request):
     for i in request.GET:

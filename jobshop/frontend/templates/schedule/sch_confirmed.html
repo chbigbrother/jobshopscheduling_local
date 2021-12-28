@@ -1,11 +1,5 @@
 {% extends "common/header.html" %}
 {% block content %}
-<link href="/static/calendar/core/main.css" rel="stylesheet" type="text/css">
-<link href="/static/calendar/daygrid/main.css" rel="stylesheet" type="text/css">
-<script src="/static/calendar/core/main.js"></script>
-<script src="/static/calendar/interaction/main.js"></script>
-<script src="/static/calendar/daygrid/main.js"></script>
-
 <div class="row">
     <div class="col-xl-7 col-lg-5">
         <div class="card shadow mb-4">
@@ -31,8 +25,16 @@
                             <th scope="col">오더번호</th>
                         </tr>
                     </thead>
-                    <tbody id="order_body">
-
+                    <tbody class="order_body">
+                        {% for order in order_list %}
+                        <tr>
+                            <td>{{forloop.counter}}</td>
+                            <td>{{order.work_str_date}}</td>
+                            <td>{{order.work_end_date}}</td>
+                            <td>{{order.sch_date}}</td>
+                            <td>{{order.order_id}}</td>
+                        </tr>
+                        {% endfor %}
                     </tbody>
                 </table>
             </div>
@@ -89,72 +91,56 @@
 <!-- **************************  modal end  ************************** -->
 
 <script>
+function dateformat(value){
+    var year = value.substring(0,4);
+    var month = value.substring(4,6);
+    var day = value.substring(6,8);
+    var date = year + '-' + month + '-' + day;
+    return date;
+}
 $(function(){
     const today = moment();
     var calendarEl = document.getElementById('calendar');
     var calendar = new FullCalendar.Calendar(calendarEl, {
-      plugins: [ 'interaction', 'dayGrid' ],
-      defaultDate: today.format('YYYY-MM-DD'),
-      editable: true,
-      locale: 'ko',
-      eventLimit: true, // allow "more" link when too many events
-      events: [
-        {
-          title: 'All Day Event',
-          start: '2021-12-01'
-        },
-        {
-          title: 'Long Event',
-          start: '2021-12-07',
-          end: '2021-12-10'
-        },
-        {
-          groupId: 999,
-          title: 'Repeating Event',
-          start: '2021-12-09T16:00:00'
-        },
-        {
-          groupId: 999,
-          title: 'Repeating Event',
-          start: '2021-12-16T16:00:00',
-          end: '2021-12-29'
-        },
-        {
-          title: 'Conference',
-          start: '2021-12-11',
-          end: '2021-12-28'
-        },
-        {
-          title: 'Meeting',
-          start: '2021-12-12T10:30:00',
-          end: '2021-12-12T12:30:00'
-        },
-        {
-          title: 'Lunch',
-          start: '2021-12-12T12:00:00'
-        },
-        {
-          title: 'Meeting',
-          start: '2021-12-12T14:30:00'
-        },
-        {
-          title: 'Happy Hour',
-          start: '2021-12-12T17:30:00'
-        },
-        {
-          title: 'Dinner',
-          start: '2021-12-12T20:00:00'
-        },
-        {
-          title: 'Birthday Party',
-          start: '2021-12-13T07:00:00'
-        },
-        {
-          title: 'Click for Google',
-          url: 'http://google.com/',
-          start: '2021-12-28'
-        }
-      ],
+        plugins: [ 'interaction', 'dayGrid' ],
+        defaultDate: today.format('YYYY-MM-DD'),
+        editable: true,
+        locale: 'ko',
+        eventLimit: true, // allow "more" link when too many events
+        eventSources: [{
+            events: function(start, callback){
+                var obj = new Object;
+                var str_year = start.start.getFullYear();
+                var str_month = start.start.getMonth()+1;
+                var end_year = start.end.getFullYear();
+                var end_month = start.end.getMonth()+1;
+                obj.str_year = str_year;
+                obj.str_month = str_month;
+                obj.end_year = end_year;
+                obj.end_month = end_month;
+
+                $.ajax({
+                    url: "{% url 'schedule.monthly_confirmed_order' %}",
+                    method:'GET',
+                    dataType: 'json',
+                    contentType: 'application/json',
+                    data : JSON.stringify(obj),
+                    processData: false,
+                    success: function(result){
+                        var events = [];
+                        for(var i=0; i<result.length; i++){
+                            events.push({
+                                id: result[i].sch_id,
+                                title: result[i].order_id,
+                                start: dateformat(result[i].work_str_date),
+                                end: dateformat(result[i].work_end_date)
+                            })
+                        }
+                        return callback(events);
+                    }
+                });
+            }
+        }],
       eventClick: function(info) {
         var data = info.event.title
         $.ajax({
@@ -168,15 +154,15 @@ $(function(){
         });
         // alert('Event: ' + info.event.title);
         // alert('Coordinates: ' + info.jsEvent.pageX + ',' + info.jsEvent.pageY);
-        // alert('View: ' + info.view.type);
 
         // change the border color just for fun
         // info.el.style.borderColor = '#fcba03';
       }
       // eventColor: ['#378006', '#f00', '#ff0000', 'rgb(255,0,0)', 'red']
     });
-
     calendar.render();
+
+
 });
 
 </script>

@@ -98,12 +98,73 @@ def history_chart(request, id):
 
 # 확정 스케쥴 Fixed Schedule HTML
 def sch_confirmed(request):
-    date = datetime.datetime.today() - timedelta(days=3)
+    date = datetime.datetime.today()
+    date = date.strftime("%Y%m%d")
+    year = date[0:4]
+    month = date[4:6]
+
+    lastday = calendar.monthrange(int(year), int(month))[1]
+    final_result = Schedule.objects.filter(work_end_date__gte=date)
+    available_list = []
+    for i in final_result:
+        available_dict = {}
+        available_dict['work_str_date'] = i.work_str_date
+        available_dict['work_end_date'] = i.work_end_date
+
+        querySet = OrderSchedule.objects.filter(sch_id=i.sch_id)
+        if len(querySet.values()) > 0:
+            for j in querySet:
+                available_dict['order_id'] = j.order_id_id
+                orderlist = OrderList.objects.get(order_id=j.order_id_id)
+                available_dict['sch_date'] = orderlist.sch_date
+                available_dict['sch_id'] = j.sch_id_id
+                available_list.append(available_dict)
+
     date = {
-        'dateFrom': date.strftime("%Y-%m-%d"),
+        'order_list': available_list,
         'path': '스케쥴링 / 확정스케쥴조회'
     }
     return render(request, 'schedule/sch_confirmed.html', date)
+
+# 수락한 오더 리스트 조회 (월별)
+def monthly_confirmed_order(request):
+    date = datetime.datetime.today().strftime("%Y%m")
+    for i in request.GET:
+        request = json.loads(i)
+    available_list = []
+    if request['str_year'] != None:
+        str_year = request['str_year']
+        str_month = request['str_month']
+        end_year = request['end_year']
+        end_month = request['end_month']
+
+        final_result = Schedule.objects.filter(work_str_date__gte=str(str_year) + str(str_month) + '01').filter(work_end_date__lte=str(end_year) + str(end_month) + '01')
+    else:
+        year = date[0:4]
+        month = date[4:6]
+
+        lastday = calendar.monthrange(int(year), int(month))[1]
+        final_result = Schedule.objects.filter(work_str_date__gte=date + '01').filter(
+            work_end_date__lte=date + str(lastday))
+
+    for i in final_result:
+        available_dict = {}
+        available_dict['work_str_date'] = i.work_str_date
+        available_dict['work_end_date'] = i.work_end_date
+
+        querySet = OrderSchedule.objects.filter(sch_id=i.sch_id)
+        if len(querySet.values()) > 0:
+            for j in querySet:
+                available_dict['order_id'] = j.order_id_id
+                available_dict['sch_id'] = j.sch_id_id
+                available_list.append(available_dict)
+
+    def json_default(value):
+        if isinstance(value, datetime.datetime):
+            return value.strftime('%Y-%m-%d')
+        raise TypeError('not JSON serializable')
+    # return JsonResponse(list(available_list), safe=False)
+    return HttpResponse(json.dumps(available_list, default=json_default, ensure_ascii=False), content_type="application/json")
 
 # draw Gantt Chart data
 def draw_graph(request):
@@ -350,12 +411,21 @@ def delete_order(request):
 
 
 def test_data(request):
-    result = fixed_list(request)
-
+    date = datetime.datetime.today().strftime("%Y%m")
+    for i in request.GET:
+        request = json.loads(i)
+    available_list = []
+    year = date[0:4]
+    month = date[4:6]
+    lastday = calendar.monthrange(int(year), int(month))[1]
+    final_result = Schedule.objects.filter(work_str_date__gte=date + '01').filter(
+        work_end_date__lte=date + str(lastday))
+    for i in final_result:
+        available_list.append(OrderSchedule.objects.filter(sch_id=i.sch_id))
     def json_default(value):
         if isinstance(value, datetime.datetime):
             return value.strftime('%Y-%m-%d')
         raise TypeError('not JSON serializable')
 
     # print(json.dumps(schedule_list, default=json_default))
-    return HttpResponse(json.dumps(result, default=json_default))
+    return HttpResponse(json.dumps(list(final_result.values()), default=json_default))
