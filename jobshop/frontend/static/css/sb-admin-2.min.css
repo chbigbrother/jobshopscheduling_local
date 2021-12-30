@@ -10002,13 +10002,33 @@ canvas {
 /* ==========================================
     top-row-nav / .pknu-searchDate
 =========================================== */
-.pknu-searchDate {width: 40%; margin-right:46%;}
+.pknu-card {
+    margin-top: 6%;
+}
+.pknu-searchDate-card {
+    display:flex;
+    padding: 0.8rem;
+    margin-bottom: 20px;
+    word-wrap: break-word;
+    background-color: #fff;
+    background-clip: border-box;
+    border: 1px solid #e3e6f0;
+    border-radius: 0.35rem;
+    box-shadow: 0 0.15rem 1.75rem 0 rgb(58 59 69 / 15%) !important;
+}
+.pknu-searchDate {
+    /* width: 40%; */
+    margin-right:46%;
+}
 .pknu-searchDate:after {content: ""; display: block; clear: both;}
 .pknu-searchDate-dd {float: left; width: 35%; padding-right: 0; padding-left: 0; text-align: center;}
 .pknu-searchDate-dd:nth-of-type(1) {width: 26%; line-height: 38px;}
 .pknu-searchDate-dd:nth-of-type(3) {width: 4%;text-align: center; line-height: 38px;}
 .pknu-searchDate-dd label {display: block; height: 100%; margin-bottom: 0;}
 .pknu-searchDate .nci-col {float: left; width: auto;}
+.col-pos-right {
+    margin-left: 1rem;
+}
 @media screen and (max-width:1399px) {
   .pknu-searchDate {width: 60%;}
   .pknu-searchDate:nth-of-type(1) {margin-bottom: 8px;}
@@ -10032,8 +10052,9 @@ canvas {
     top-row-nav / .pknu-search-form
 =========================================== */
 .pknu-search-form{
-    margin-left: -32px;
-    margin-bottom: 18px;
+    margin-left: -21px;
+    position:absolute;
+
 }
 
 @media (min-width: 768px) {

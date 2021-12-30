@@ -19,3 +19,8 @@ def id_generate(request, id):
         str_id = request + str(int_id)
 
     return str_id
+
+def date_str(date):
+    str_date = date[0:4] + '-' + date[4:6] + '-' + date[6:8]
+
+    return str_date

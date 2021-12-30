@@ -114,10 +114,13 @@
                 <div id="collapseSchedule" class="collapse {% if request.resolver_match.url_name == "schedule.index" %} show
                 {% elif request.resolver_match.url_name == "schedule.sch_confirmed" %} show
                 {% elif request.resolver_match.url_name == "schedule.history" %} show
+                {% elif request.resolver_match.url_name == "schedule.history_chart" %} show
                 {% endif %}" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
                         <a href="/schedule/confirmed/" class="collapse-item {% if request.resolver_match.url_name == "schedule.sch_confirmed" %} active {% endif %}" >확정스케쥴조회</a>
-                        <a href="/schedule/history/" class="collapse-item {% if request.resolver_match.url_name == "schedule.history" %} active {% endif %}" >스케쥴링이력</a>
+                        <a href="/schedule/history/" class="collapse-item {% if request.resolver_match.url_name == "schedule.history" %} active
+                        {% elif request.resolver_match.url_name == "schedule.history_chart" %} active
+                        {% endif %}" >스케쥴링이력</a>
                         <a href="/schedule/" class="collapse-item {% if request.resolver_match.url_name == "schedule.index" %} active {% endif %}" >스케쥴링실행</a>
                     </div>
                 </div>
@@ -133,7 +136,7 @@
             <!-- Divider -->
             <hr class="sidebar-divider">
             <img class="img-profile"
-                                src="/static/img/pknu_logo.png" style="width:30%; margin:10% 30%;">
+                                src="/static/img/pknu_logo.png" style="width:20%; margin:10% 35%;">
 
             <!-- Nav Item - Pages Collapse Menu -->
             <!--<li class="nav-item">

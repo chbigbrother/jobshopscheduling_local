@@ -4,6 +4,7 @@ from django.http import HttpResponse, JsonResponse
 from django.views.generic import ListView, CreateView, DetailView, UpdateView, DeleteView, TemplateView
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.models import User, Group
+from django.utils.encoding import smart_str
 from django.db.models import Max
 from django.template import loader
 from rest_framework import serializers
@@ -11,11 +12,13 @@ from openpyxl import load_workbook
 from fileutils.forms import FileUploadCsv
 from .models import OrderSchedule, OrderList
 from company.models import *
-from common.views import id_generate
+from common.views import id_generate, date_str
+from company.views import Product
 from datetime import timedelta
 from .models import *
 import datetime, json, csv
 import pandas as pd
+from urllib.parse import quote
 
 # 수주관리등록 order management register HTML
 def home(request):
@@ -40,6 +43,7 @@ def order_list_view(request):
     }
     return render(request, template_name, context)
 
+# 수주관리검색 항목 조회
 def order_list_query(request):
     date = datetime.datetime.today() - timedelta(days=3)
 
@@ -56,9 +60,49 @@ def order_list_query(request):
         sch_date_to = datetime.datetime.today()
         order_list = OrderList.objects.filter(sch_date__gte=date.strftime("%Y%m%d"),
                                               sch_date__lte=datetime.datetime.today().strftime("%Y%m%d"))
+    for i in order_list:
+        i.exp_date = date_str(i.exp_date)
+        i.sch_date = date_str(i.sch_date)
 
     return sch_date_from.strftime("%Y-%m-%d"), sch_date_to.strftime("%Y-%m-%d"), order_list
 
+# 수주관리검색 수정
+def order_list_edit(request):
+    if request.method == 'POST':
+        request = json.loads(request.body)
+
+    cust_name = request['cust_name']
+    prod_name = request['prod_name']
+    amount = request['amount']
+    exp_date = request['exp_date']
+    contact = request['contact']
+    email = request['email']
+    order_id = request['order_id']
+    # prod_id = Product.objects.get(prod_name=prod_name)
+
+    product = OrderList.objects.get(order_id=order_id)
+    product.cust_name = cust_name
+    product.prod_id = Product.objects.get(prod_name=prod_name[0])
+    product.amount = amount
+    product.exp_date = exp_date.replace('-', '').replace('-', '')
+    product.contact = contact
+    product.email = email
+
+    product.save();
+
+    return JsonResponse({"message": 'success'})
+
+# 수주관리검색 수정
+def order_list_delete(request):
+    if request.method == 'POST':
+        request = json.loads(request.body)
+    order_id = request['order_id']
+    order = OrderList.objects.get(order_id=order_id)
+    order.delete();
+
+    return JsonResponse({"message": 'success'})
+
+# 스케쥴링실행 메뉴의 해당 주문일자 별 수주검색
 def order_list_search(request):
     date = datetime.datetime.today() - timedelta(days=3)
     for i in request.GET:
@@ -331,6 +375,31 @@ def upload_file(request):
     else:
         form = FileUploadCsv()
     return JsonResponse({"message": request.FILES})
+
+# 수주문서양식다운로드
+def order_csv_download_blank(request):
+    filename = request.user.groups.values('name')[0]['name'] + "_수주정보.csv"
+
+    # response content type
+    response = HttpResponse(
+        content_type='text/csv',
+        headers={'Content-Disposition': "attachment;filename*=UTF-8''{}".format(quote(filename.encode('utf-8')))},
+    )
+
+    writer = csv.writer(response, csv.excel)
+    response.write(u'\ufeff'.encode('utf8'))
+
+    # write the headers
+    writer.writerow([
+        smart_str(u"고객명"),
+        smart_str(u"주문일자"),
+        smart_str(u"마감기한"),
+        smart_str(u"제품명"),
+        smart_str(u"수량"),
+        smart_str(u"전화번호"),
+        smart_str(u"이메일"),
+    ])
+    return response
 
 # Draw table after reading csv file
 def order_read_csv(request):

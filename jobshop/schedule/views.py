@@ -5,6 +5,7 @@ from django.contrib.auth.models import User, Group
 from django.http import JsonResponse
 from django.http.response import HttpResponse
 from .sslstm import sslstm
+from common.views import id_generate, date_str
 from company.models import *
 from order.models import *
 import pandas as pd
@@ -33,11 +34,11 @@ def history(request):
         date_from = request.GET['dateFrom'].replace('-', '')
         date_to = request.GET['dateTo'].replace('-', '')
         schedule_list = Schedule.objects.raw(
-            "SELECT *, SUBSTRING(sch_id, 4, 8) as exe_date, SUBSTRING_INDEX(order_id, '.', 1) AS orderid, max(COUNT) as max_count " +
+            "SELECT sch_id, SUBSTRING(sch_id, 4, 8) as exe_date, SUBSTRING_INDEX(order_id, '.', 1) AS orderid, max(COUNT) as max_count " +
             "FROM company_schedule " +
             "WHERE SUBSTRING(sch_id, 4, 8) >= '" + date_from + "' AND "
-                                                                             "SUBSTRING(sch_id, 4, 8) <= '" + date_to + "'" +
-        "GROUP BY SUBSTRING(sch_id, 4, 8), SUBSTRING(order_id, 4, 3)")
+                    "SUBSTRING(sch_id, 4, 8) <= '" + date_to + "'" +
+            "GROUP BY order_id")
     else:
         sch_date_from = date
         sch_date_to = datetime.datetime.today()
@@ -46,7 +47,7 @@ def history(request):
             "FROM company_schedule " +
             "WHERE SUBSTRING(sch_id, 4, 8) >= '" + date.strftime("%Y%m%d") + "' AND "
             "SUBSTRING(sch_id, 4, 8) <= '" + datetime.datetime.today().strftime( "%Y%m%d") + "'" +
-            "GROUP BY SUBSTRING(sch_id, 4, 8), SUBSTRING(order_id, 4, 3)")
+            "GROUP BY order_id")
 
 
     sch_list = []
@@ -54,17 +55,16 @@ def history(request):
         sch_dict = {}
         sch_dict['orderid'] = sch.orderid
         sch_dict['max_count'] = sch.max_count
-        exe_date = datetime.datetime.strptime(sch.exe_date, "%Y%m%d")
-        sch_dict['exe_date'] = exe_date.strftime("%Y-%m-%d")
-        sch_date = OrderList.objects.filter(order_id=sch.orderid)
-        for ord in sch_date:
-            sch_date = datetime.datetime.strptime(ord.sch_date, "%Y%m%d")
-            exp_date = datetime.datetime.strptime(ord.exp_date, "%Y%m%d")
-            sch_dict['sch_date'] = sch_date.strftime("%Y-%m-%d")
-            sch_dict['exp_date'] = exp_date.strftime("%Y-%m-%d")
+        sch_dict['exe_date'] = date_str(sch.exe_date)
+        sch_dict['work_end_date'] = date_str(sch.work_end_date)
+        order_list = OrderList.objects.filter(order_id=sch.order_id)
+        for i in order_list:
+            sch_dict['sch_date'] = date_str(i.sch_date)
+            sch_dict['prod_name'] = i.prod_id.prod_name
+
         sch_list.append(sch_dict)
 
-    date = datetime.datetime.today() - timedelta(days=3)
+
     date = {
         'dateFrom': sch_date_from.strftime("%Y-%m-%d"),
         'dateTo': sch_date_to.strftime("%Y-%m-%d"),
@@ -151,7 +151,6 @@ def monthly_confirmed_order(request):
         available_dict = {}
         available_dict['work_str_date'] = i.work_str_date
         available_dict['work_end_date'] = i.work_end_date
-
         querySet = OrderSchedule.objects.filter(sch_id=i.sch_id)
         if len(querySet.values()) > 0:
             for j in querySet:
@@ -224,17 +223,18 @@ def update_graph(request):
         for i in range(len(list)):
             order_number = str(list[i][6]).split('.')
             for j in range(len(list[i])):
-                    Schedule.objects.update_or_create(
-                        sch_id='SCH' + list[i][0] + str(list[i][1])[2:3] + count,
-                        comp_id=Information.objects.get(comp_id=request.user.groups.values('id')[0]['id']),
-                        count=int(count) + 1,
-                        sch_color=list[i][1],
-                        order_id=str(order_list[int(order_number[0]) - 1]) + '.' + order_number[1],  # 추후 오더 데이터에서 가져오기
-                        x_axis_1=list[i][2],
-                        x_axis_2=list[i][3],
-                        y_axis_1=list[i][4],
-                        y_axis_2=list[i][5]
-                    )
+                print('d')
+                    # Schedule.objects.update_or_create(
+                    #     sch_id='SCH' + list[i][0] + str(list[i][1])[2:3] + count,
+                    #     comp_id=Information.objects.get(comp_id=request.user.groups.values('id')[0]['id']),
+                    #     count=int(count) + 1,
+                    #     sch_color=list[i][1],
+                    #     order_id=str(order_list[int(order_number[0]) - 1]) + '.' + order_number[1],  # 추후 오더 데이터에서 가져오기
+                    #     x_axis_1=list[i][2],
+                    #     x_axis_2=list[i][3],
+                    #     y_axis_1=list[i][4],
+                    #     y_axis_2=list[i][5]
+                    # )
         break
 
     return JsonResponse({"message": 'success'})

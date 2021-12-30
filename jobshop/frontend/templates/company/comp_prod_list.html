@@ -3,26 +3,36 @@
 
 <!-- Page Heading -->
 <!-- DataTales Example -->
+<div class="row">
+    <div class="col-lg-12">
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <form method="get" action="{% url 'company.facility' %}">
+                    <div class="pknu-table-responsive">
+                        <div class="col-lg-12 col-md-4 pknu-searchDate-card">
+                            <div class="col-lg-1 col-md-3 pknu-searchDate-dd">
+                                <label>주문일자</label>
+                            </div>
+                            <div class="col-lg-2 col-md-4 pknu-searchDate-dd" >
+                                 <input class="form-control text-center" type="text" name="dateFrom" id="dateFrom" value="{{ dateFrom }}"/>
+                            </div>
+                            <div class="col-lg-1 col-md-1 pknu-searchDate-dd">~</div>
+                            <div class="col-lg-2 col-md-4 pknu-searchDate-dd" style="margin-right:0.4rem;">
+                                <input class="form-control text-center" type="text" name="dateTo" id="dateTo" value="{{ dateTo }}"/>
+                            </div>
+                            <div class="col-pos-right">
+                                <button id="searchBtn" href="#" class="d-sm-inline-block btn btn-sm btn-primary shadow-sm"><i class="fas fa-search mr-1"></i>검색</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 <div class="card shadow mb-4">
     <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
         <h6 class="m-0 font-weight-bold text-primary">조회</h6>
-        <div class="col-auto pknu-searchDate">
-            <div class="col-lg-2 col-md-3 pknu-searchDate-dd">
-                <label>작업일자</label>
-            </div>
-            <div class="col-lg-3 col-md-4 pknu-searchDate-dd" >
-                 <input class="form-control text-center" type="text" name="dateFrom" id="dateFrom" />
-            </div>
-            <div class="col-lg-1 col-md-1 pknu-searchDate-dd">~</div>
-            <div class="col-lg-3 col-md-4 pknu-searchDate-dd" style="margin-right:0.4rem;">
-                <input class="form-control text-center" type="text" name="dateTo" id="dateTo" />
-            </div>
-            <div class="col-pos-right">
-                <a id="searchBtn" href="#" class="d-sm-inline-block btn btn-sm btn-primary shadow-sm">
-                    <i class="fas fa-search mr-1"></i>검색
-                </a>
-            </div>
-        </div>
         <div class="dropdown no-arrow" >
             <a href="#" class="btn btn-success btn-icon-split">
                 <span class="icon text-white-50">
@@ -33,44 +43,46 @@
         </div>
     </div>
     <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
-                <thead>
-                    <tr>
-                        <th>순번</th>
-                        <th>회사명</th>
-                        <th>작업호기</th>
-                        <th>작업일자</th>
-                        <th>작업종료일자</th>
-                        <th>고객요청기한</th>
-                        <th>제품명</th>
-                        <th>생산량(yd)</th>
-                        <th>등록일시</th>
-                        <th>수정일시</th>
-                        <th style="text-align:center;">관리</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for comp in comp_list %}
-                    <tr>
-                        <td>{{forloop.counter}}</td>
-                        <td>{{comp.comp_name}}</td>
-                        <td>{{comp.facility_name}}</td>
-                        <td>{{comp.work_date}}</td>
-                        <td>{{comp.work_end_date}}</td>
-                        <td>{{comp.comp_name}}</td>
-                        <td>{{comp.prod_name}}</td>
-                        <td>{{comp.prod_output}}</td>
-                        <td>{{comp.created_at}}</td>
-                        <td>{{comp.modified_at}}</td>
-                        <td style="text-align:center;">
-                            <a href="" id="edit_{{ comp.id }}"><i class="far fa-edit {{ comp.id }}"></i></a>
-                            <a href="" id="delete_{{ comp.id }}" style="margin-left:10px;"><i class="fas fa-trash-alt"></i></a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div class="pknu-table-responsive">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>순번</th>
+                            <th>회사명</th>
+                            <th>작업호기</th>
+                            <th>작업시작일자</th>
+                            <th>작업종료일자</th>
+                            <th>고객요청기한</th>
+                            <th>제품명</th>
+                            <th>생산량(yd)</th>
+                            <th>등록일시</th>
+                            <th>수정일시</th>
+                            <th style="text-align:center;">관리</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for comp in comp_list %}
+                        <tr>
+                            <td>{{forloop.counter}}</td>
+                            <td>{{comp.comp_name}}</td>
+                            <td>{{comp.facility_name}}</td>
+                            <td>{{comp.work_str_date}}</td>
+                            <td>{{comp.work_end_date}}</td>
+                            <td>{{comp.exp_date}}</td>
+                            <td>{{comp.prod_name}}</td>
+                            <td>{{comp.amount}}</td>
+                            <td>{{comp.created_at}}</td>
+                            <td>{{comp.modified_at}}</td>
+                            <td style="text-align:center;">
+                                <a href="" id="edit_{{ comp.id }}"><i class="far fa-edit {{ comp.id }}"></i></a>
+                                <a href="" id="delete_{{ comp.id }}" style="margin-left:10px;"><i class="fas fa-trash-alt"></i></a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
@@ -94,6 +106,22 @@
     <!--게시판 관련 js-->
     <script>
     $(function(){
+        // 검색 날짜 init
+        flatpickr("#dateTo", {
+               locale: Flatpickr.l10ns.ko,
+               enableTime: false,
+               dateFormat: "Y-m-d",
+               disableMobile: true,
+               defaultDate: $('#dateTo').val()
+               // defaultDate: [today.format('YYYY-MM-DD')]
+        });
+        flatpickr("#dateFrom", {
+               locale: Flatpickr.l10ns.ko,
+               enableTime: false,
+               dateFormat: "Y-m-d",
+               disableMobile: true,
+               defaultDate: $('#dateFrom').val()
+        });
         // 수정
         $('.fa-edit').on('click', function(){
             $('#editModal').modal("show");
@@ -125,6 +153,7 @@
             });
             return false;
         });
+
     });
     </script>
 {% endblock %}

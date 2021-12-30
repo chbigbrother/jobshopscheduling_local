@@ -23,6 +23,7 @@
                         <th>순번</th>
                         <th>회사명</th>
                         <th>설비 호기</th>
+                        <th style="display:none;"></th>
                         <th style="text-align:center;">관리</th>
                     </tr>
                 </thead>
@@ -30,11 +31,12 @@
                     {% for comp in comp_list %}
                     <tr>
                         <td>{{forloop.counter}}</td>
-                        <td>{{comp.comp_name}}</td>
-                        <td>{{comp.facility_name}}</td>
+                        <td class="compName">{{comp.comp_name}}</td>
+                        <td class="facNum">{{comp.facility_name}}</td>
+                        <td class="facilityId" style="display:none;">{{comp.facility_id}}</td>
                         <td style="text-align:center;">
-                            <a href="" id="edit_{{ comp.id }}"><i class="far fa-edit {{ comp.id }}"></i></a>
-                            <a href="" id="delete_{{ comp.id }}" style="margin-left:10px;"><i class="fas fa-trash-alt"></i></a>
+                            <a href="#" id="edit_{{ comp.id }}"><i class="far fa-edit {{ comp.id }}"></i></a>
+                            <a href="#" id="delete_{{ comp.id }}" style="margin-left:10px;"><i class="fas fa-trash-alt"></i></a>
                         </td>
                     </tr>
                     {% endfor %}
@@ -44,29 +46,61 @@
     </div>
 </div>
 
+<!-- ***************************************************************** 관리 Modal ***************************************************************** -->
+<div class="modal fade" id="editModal" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog modal-dialog2" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                    <h4 class="modal-title" id="exampleModalLabel">설비정보 관리</h4>
+                    <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                </div>
+            <div class="modal-body">
+                <div class="row pknu-modal-row">
+                    <div class="col-md-3"><label for="divCompName" class="pt-2">회사명</label></div>
+                    <div class="col-md-6" id="divCompName">
+                        <input class="form-control text-center" type="text" name="compName" id="compName" readonly="readonly"/>
+                    </div>
+                </div>
+                <div class="row pknu-modal-row">
+                    <div class="col-md-3"><label for="facNum" class="pt-2" style="font-size:0.95rem;">설비호기</label></div>
+                    <div class="col-lg-6" >
+                         <input class="form-control text-center" type="text" name="facNum" id="facNum" />
+                    </div>
+                </div>
+                <input class="form-control text-center" type="hidden" name="facility_id" id="facility_id" />
+            </div>
+            <div class="modal-footer" id="htfooter">
+                <button type="button" class="d-none d-sm-inline-block btn btn-sm btn-danger shadow-sm" data-dismiss="modal">
+                    <i class="far fa-window-close fa-sm text-white-50"></i> 취소
+                </button>
+                <a href="#" id="editBtn" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
+                    <i class="far fa-paper-plane fa-sm text-white-50"></i> 수정
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- 관리 Modal END -->
 
+<!-- Scroll to Top Button-->
+<a class="scroll-to-top rounded" href="#page-top">
+    <i class="fas fa-angle-up"></i>
+</a>
 
-    <!-- Scroll to Top Button-->
-    <a class="scroll-to-top rounded" href="#page-top">
-        <i class="fas fa-angle-up"></i>
-    </a>
-
-    <!--게시판 관련 js-->
-    <!-- Page level plugins -->
-    <script src="/static/vendor/datatables/jquery.dataTables.min.js"></script>
-    <script src="/static/vendor/datatables/dataTables.bootstrap4.min.js"></script>
-    <!-- Page level custom scripts -->
-    <script src="/static/js/demo/datatables-demo.js"></script>
-    <!-- sweetalert 설치 후 사용가능
-         $ npm install sweetalert2 -->
-    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <!--게시판 관련 js-->
-    <script>
+<!--게시판 관련 js-->
+<!-- Page level plugins -->
+<script src="/static/vendor/datatables/jquery.dataTables.min.js"></script>
+<script src="/static/vendor/datatables/dataTables.bootstrap4.min.js"></script>
+<!-- Page level custom scripts -->
+<script src="/static/js/demo/datatables-demo.js"></script>
+<!-- sweetalert 설치 후 사용가능
+     $ npm install sweetalert2 -->
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<!--게시판 관련 js-->
+<script>
     $(function(){
-        // 수정
-        $('.fa-edit').on('click', function(){
-            $('#editModal').modal("show");
-        });
         // 삭제
         var selectdata = new Object();
         $('.fa-trash-alt').on('click', function(e){
@@ -94,6 +128,42 @@
             });
             return false;
         });
+
+        $('.fa-edit').on('click', function(){
+            $('#editModal').modal('show');
+            /* Modal 내부 input 내용 */
+            var comp_name = $(this).parents().siblings('.compName')[0].innerText;
+            var facility_name = $(this).parents().siblings('.facNum')[0].innerText;
+            var facility_id = $(this).parents().siblings('.facilityId')[0].innerText;
+
+            $('#compName').val(comp_name);
+            $('#facNum').val(facility_name);
+            $('#facility_id').val(facility_id);
+            /* Modal 내부 input 내용 */
+
+            /* edit */
+            $('#editBtn').on('click', function(){
+                var obj = new Object();
+                obj.facility_name = $('#facNum').val();
+                obj.facility_id = $('#facility_id').val();
+
+                var url = "{% url 'company.fac_list_edit'%}";
+                $.ajax({
+                    url: url,
+                    method:'POST',
+                    contentType: false,
+                    processData: false,
+                    dataType :   "json",
+                    contentType :   "application/x-www-form-urlencoded; charset=UTF-8",
+                    data: JSON.stringify(obj),
+                    success: function(result){
+                        location.reload();
+                    }
+                });
+            });
+            /* edit */
+        });
+
     });
-    </script>
+</script>
 {% endblock %}

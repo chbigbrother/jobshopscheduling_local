@@ -22,9 +22,9 @@
                     <tr>
                         <th>순번</th>
                         <th>제품명</th>
-                        <th>rpm</th>
                         <th>밀도</th>
-                        <th>일일생산량</th>
+                        <th>평균rpm</th>
+                        <th>일일평균생산량</th>
                         <th>생성일자</th>
                         <th>수정일자</th>
                         <th style="text-align:center;">관리</th>
@@ -35,8 +35,8 @@
                     <tr>
                         <td>{{forloop.counter}}</td>
                         <td>{{comp.prod_name}}</td>
-                        <td>{{comp.rpm}}</td>
                         <td>{{comp.density}}</td>
+                        <td>{{comp.rpm}}</td>
                         <td>{{comp.daily_prod_rate}}</td>
                         <td>{{comp.created_at}}</td>
                         <td>{{comp.modified_at}}</td>

@@ -35,6 +35,12 @@
             <!--modal body-->
             <!--modal footer-->
             <div class="modal-footer">
+                <a href="{% url 'order.order_csv_download_blank' %}" class="btn btn-info btn-icon-split upload-btn">
+                    <span class="icon text-white-50">
+                        <i class="fas fa-check"></i>
+                    </span>
+                    <span class="text">수주문서업로드양식다운로드</span>
+                </a>
                 <button class="btn btn-secondary" type="button" data-dismiss="modal">취소</button>
                 <button type="button" class="btn btn-primary" id="fileReadBtn">업로드</button>
             </div>
