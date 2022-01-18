@@ -406,15 +406,16 @@ def comp_update_csv(request):        # 파일객체가 하나도 없다면 작�
 
 # 해당 일자 작업 가능한 기계 조회
 def comp_avail_facility(request):
+    user = request.user.groups.values('id')[0]['id']
 
     for i in request.GET:
         request = json.loads(i)
 
     if request['strDate'] != None:
         strDate = request['strDate'].replace('-', '')
-        order_list = Schedule.objects.filter(work_end_date__gt=strDate)
+        order_list = OrderSchedule.objects.filter(sch_id__work_end_date__gt=strDate, sch_id__comp_id=user)
     else:
-        order_list = Schedule.objects.filter(work_end_date__gt=datetime.datetime.today().strftime("%Y%m%d"))
+        order_list = OrderSchedule.objects.filter(sch_id__work_end_date__gt=datetime.datetime.today().strftime("%Y%m%d"))
 
     fac_list = Facility.objects.all()
     result_list = []
@@ -422,23 +423,25 @@ def comp_avail_facility(request):
     if len(order_list) > 0:
         for i in fac_list:
             for j in order_list:
-                if i.facility_id == j.facility_id.facility_id:
+                if i.facility_id == j.sch_id.facility_id.facility_id:
                     continue;
                 else:
                     result_list.append(i.facility_id)
+        result_list = set(result_list)
+        result_list = list(result_list)
+        result_list.sort(reverse=False)
+
         result = []
         final_list = []
         for i in result_list:
             if i in result:
                 final_list.append(i)
             if i not in result:
-                result.append(i)
+                final_list.append(i)
     else:
         final_list = []
         for i in fac_list:
             final_list.append(i.facility_id)
-
-
 
     return JsonResponse(final_list, safe=False)
 

@@ -1,5 +1,4 @@
-{% extends "common/header.html" %}
-{% block content %}
+{% extends "common/header.html" %} {% block content %}
 
 <!-- Page Heading -->
 <div class="row">
@@ -15,7 +14,7 @@
                 </div>
             </div>
             <!-- Card Body -->
-            <div class="card-body chart-body" >
+            <div class="card-body chart-body">
                 <div class="chart-area">
                     <canvas id="myAreaChart"></canvas>
                 </div>
@@ -25,8 +24,7 @@
     <div class="col-lg-6">
         <!-- Circle Buttons -->
         <div class="card shadow mb-4">
-            <div
-                class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
                 <h6 class="m-0 font-weight-bold text-primary">처리 가능 오더 리스트</h6>
                 <div class="dropdown no-arrow" id="sendBtn">
                     <a href="#" onclick="sendSchedule()" id="sendSchedule" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm"><i class="far fa-paper-plane">
@@ -40,6 +38,7 @@
                             <th scope="col">번호</th>
                             <th scope="col">오더일자</th>
                             <th scope="col">오더번호</th>
+                            <th scope="col">제품명</th>
                             <th scope="col">색상</th>
                             <th scope="col">수락</th>
                         </tr>
@@ -61,26 +60,26 @@
     <div class="modal-dialog modal-dialog2" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                    <h4 class="modal-title" id="exampleModalLabel">작업 스케줄링 설정</h4>
-                    <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                <h4 class="modal-title" id="exampleModalLabel">작업 스케줄링 설정</h4>
+                <button class="close" type="button" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">×</span>
                     </button>
-                </div>
+            </div>
             <div class="modal-body">
                 <div class="row pknu-modal-row">
                     <div class="col-md-3"><label for="ordDateFrom" class="pt-2">주문조회일자</label></div>
                     <div class="col-md-3">
-                         <input type="text" class="form-control" id="ordDateFrom" aria-describedby="emailHelp" placeholder="" value="{{ dateFrom }}" readonly="readonly" />
+                        <input type="text" class="form-control" id="ordDateFrom" aria-describedby="emailHelp" placeholder="" value="{{ dateFrom }}" readonly="readonly" />
                     </div>
                     ~
                     <div class="col-md-3">
-                         <input type="text" class="form-control" id="ordDateTo" aria-describedby="emailHelp" placeholder="" value="" readonly="readonly" />
+                        <input type="text" class="form-control" id="ordDateTo" aria-describedby="emailHelp" placeholder="" value="" readonly="readonly" />
                     </div>
                 </div>
 
                 <div class="row pknu-modal-row">
                     <div class="col-md-3"><label class="pt-2">주문선택</label></div>
-                    <div class="col-md-6" id="divSelectOrder">
+                    <div class="col-md-6" id="divSelectOrder_old">
                         <!-- <select class="form-control" name="select" multiple="multiple" id="selectOrder">
 
                         </select> -->
@@ -88,15 +87,16 @@
                 </div>
                 <div class="row pknu-modal-row">
                     <div class="col-md-3"><label for="strDate" class="pt-2" style="font-size:0.95rem;">작업시작일자</label></div>
-                    <div class="col-lg-6" >
-                         <input class="form-control text-center" type="text" name="dateFrom" id="strDate" />
+                    <div class="col-lg-6">
+                        <input class="form-control text-center" type="text" name="dateFrom" id="strDate" />
                     </div>
                 </div>
                 <div class="row pknu-modal-row">
-                    <div class="col-md-3"><label class="pt-2" style="font-size:0.95rem;">사용 가능 기계</label></div>
+                    <div class="col-md-3"><label class="pt-2" style="font-size:0.95rem;">사용가능기계</label></div>
                     <div class="col-md-6" id="divSelectFac">
 
                     </div>
+                    <!--<p class="modal-p">※ 사용 가능한 기계를 선택해 주세요.<p/>-->
                 </div>
                 <!--<div class="row pknu-modal-row">
                     <div class="col-lg-11" id="scheduletable" style="overflow:scroll;">
@@ -114,8 +114,8 @@
                 </div>-->
                 <div class="row pknu-modal-row">
                     <div class="col-md-3"><label for="estDate" class="pt-2" style="font-size:0.95rem;">작업기한설정</label></div>
-                    <div class="col-lg-6" >
-                         <input class="form-control text-center" type="text" name="dateFrom" id="estDate" />
+                    <div class="col-lg-6">
+                        <input class="form-control text-center" type="text" name="dateFrom" id="estDate" />
                     </div>
                 </div>
             </div>
@@ -139,144 +139,180 @@
 <div id="css-loader" class="loader loader-default"></div>
 
 <script>
-    function dateformat(value){
-        var year = value.substring(0,4);
-        var month = value.substring(4,6);
-        var day = value.substring(6,8);
+    function dateformat(value) {
+        var year = value.substring(0, 4);
+        var month = value.substring(4, 6);
+        var day = value.substring(6, 8);
         var date = year + '-' + month + '-' + day;
         return date;
     }
     // 전송 클릭 시 이벤트
-    function sendSchedule(){
+    function sendSchedule() {
         Swal.fire({
-          icon: 'question',
-          title: '스케쥴을 확정하시겠습니까?',
-          showDenyButton: true,
-          confirmButtonText: '네',
-          denyButtonText: `아니오`,
+            icon: 'question',
+            title: '스케쥴을 확정하시겠습니까?',
+            showDenyButton: true,
+            confirmButtonText: '네',
+            denyButtonText: `아니오`,
         }).then((result) => {
-            if(result.isConfirmed){
+            if (result.isConfirmed) {
                 $('#css-loader').addClass("is-active");
                 var order = new Array();
-                for(var i=0; i<$('.checkbox').length; i++){
-                    if($('.checkbox').eq(i).val()=='Y'){
+                for (var i = 0; i < $('.checkbox').length; i++) {
+                    if ($('.checkbox').eq(i).val() == 'Y') {
                         order.push($('.checkbox').eq(i).parent().siblings('.sch_id').val());
                     }
                 }
                 $.ajax({
                     url: "{% url 'fixed_order' %}",
                     method: 'POST',
-                    dataType :   "json",
-                    contentType :   "application/x-www-form-urlencoded; charset=UTF-8",
-                    data:{'order_list[]': order},
-                }).done(function(response){
+                    dataType: "json",
+                    contentType: "application/x-www-form-urlencoded; charset=UTF-8",
+                    data: {
+                        'order_list[]': order
+                    },
+                }).done(function(response) {
                     $('#css-loader').removeClass("is-active");
                     location.reload();
+                    $('#activationSettingModal').modal('hide');
                 })
             }
         });
     }
     // 새로 생성 버튼 클릭 시 이벤트
-    function removeSchedule(){
+    function removeSchedule() {
         // 기존의 확정된 스케줄 삭제
         Swal.fire({
-          icon: 'question',
-          title: '스케쥴을 새로 생성하시겠습니까?',
-          showDenyButton: true,
-          confirmButtonText: '네',
-          denyButtonText: `아니오`,
+            icon: 'question',
+            title: '스케쥴을 새로 생성하시겠습니까?',
+            showDenyButton: true,
+            confirmButtonText: '네',
+            denyButtonText: `아니오`,
         }).then((result) => {
-            if(result.isConfirmed){
+            if (result.isConfirmed) {
                 $('#css-loader').addClass("is-active");
                 // var order = new Array();
                 var sch = new Array();
-                for(var i=0; i<$('.order_id').length; i++){
+                for (var i = 0; i < $('.order_id').length; i++) {
                     // order.push($('.order_id').eq(i).val());
                     sch.push($('.sch_id').eq(i).val());
                 }
                 $.ajax({
                     url: "{% url 'delete_order' %}",
                     method: 'POST',
-                    dataType :   "json",
-                    contentType :   "application/x-www-form-urlencoded; charset=UTF-8",
-                    data:{'sch_list[]' : sch},
-                }).done(function(response){
+                    dataType: "json",
+                    contentType: "application/x-www-form-urlencoded; charset=UTF-8",
+                    data: {
+                        'sch_list[]': sch
+                    },
+                }).done(function(response) {
                     $('#css-loader').removeClass("is-active");
                     location.reload();
                 })
-
             }
         });
     }
 
     // 섬유공정스케줄실행 클릭 시 이벤트
-    function activate(){
+    function activate() {
         $('#css-loader').addClass("is-active");
+        var selected_fac = $('#divSelectFac').find(':selected');
+        var selected_ord_list = new Array();
+        var selected_fac_list = new Array();
+        var selected_amt_list = new Array();
+        var selected_fac_num_list = new Array();
+        $('.ordamt').each(function(i){
+            var cnt = $('.ordamt')[i].classList.length-1;
+            var prod_name = $('.ordamt')[i].id;
+            selected_ord_list.push(prod_name);
+            var amt = $('.ordamt')[i].classList[cnt];
+            amt = amt.split('_');
+            amt = amt[1];
+            selected_amt_list.push(amt);
+        });
+        $('.setMachineNum').each(function(i){
+            selected_fac_num_list.push($('.setMachineNum')[i].value);
+        });
+        for (var i = 0; i < selected_fac.length; i++) {
+            selected_fac_list.push(selected_fac[i].innerText);
+        }
+        var obj = new Object();
+        obj.ord = selected_ord_list;
+        obj.fac = selected_fac_list;
+        obj.amt = selected_amt_list;
+        obj.avail_fac_num = selected_fac_num_list;
+        obj.work_str_date = $('#strDate').val();
+        obj.work_exp_date = $('#estDate').val();
         $.ajax({
-            url: "{% url 'update_graph' %}",
-        }).done(function(response){
+            url: "{% url 'generate_data' %}",
+            data: JSON.stringify(obj),
+            type: 'json',
+            contentType: 'application/json',
+            method: "POST",
+        }).done(function(response) {
             $('#css-loader').removeClass("is-active");
             location.reload();
         })
     }
 
-    $(function(){
+    $(function() {
         const today = moment();
         // 검색 날짜 init
         flatpickr("#dateTo", {
-               locale: Flatpickr.l10ns.ko,
-               enableTime: false,
-               dateFormat: "Y-m-d",
-               disableMobile: true,
-               defaultDate: [today.format('YYYY-MM-DD')]
+            locale: Flatpickr.l10ns.ko,
+            enableTime: false,
+            dateFormat: "Y-m-d",
+            disableMobile: true,
+            defaultDate: [today.format('YYYY-MM-DD')]
         });
         // 검색 날짜 init
         flatpickr("#dateFrom", {
-               locale: Flatpickr.l10ns.ko,
-               enableTime: false,
-               dateFormat: "Y-m-d",
-               disableMobile: true,
-               defaultDate: $("#dateFrom").val()
+            locale: Flatpickr.l10ns.ko,
+            enableTime: false,
+            dateFormat: "Y-m-d",
+            disableMobile: true,
+            defaultDate: $("#dateFrom").val()
         });
-        $('#activationSetting').on('click',function(){
+        $('#activationSetting').on('click', function() {
             $('#activationSettingModal').modal('show');
+            $('#activationSettingModal').modal({
+                backdrop: 'static',
+                keyboard: false
+            });
         })
-        $(document).ready(function(){
-            $('#activationSettingModal').modal({backdrop: 'static', keyboard: false})
-            $('#activationSettingModal').modal('show');
+        $(document).ready(function() {
 
             const today = moment();
             // 검색 날짜 init
             flatpickr("#estDate, #strDate, #ordDateTo", {
-                   locale: Flatpickr.l10ns.ko,
-                   enableTime: false,
-                   dateFormat: "Y-m-d",
-                   disableMobile: true,
-                   defaultDate: [today.format('YYYY-MM-DD')]
+                locale: Flatpickr.l10ns.ko,
+                enableTime: false,
+                dateFormat: "Y-m-d",
+                disableMobile: true,
+                defaultDate: [today.format('YYYY-MM-DD')]
             });
             // 검색 날짜 init
             flatpickr("#ordDateFrom", {
-                   locale: Flatpickr.l10ns.ko,
-                   enableTime: false,
-                   dateFormat: "Y-m-d",
-                   disableMobile: true,
-                   defaultDate: $("#dateFrom").val()
+                locale: Flatpickr.l10ns.ko,
+                enableTime: false,
+                dateFormat: "Y-m-d",
+                disableMobile: true,
+                defaultDate: $("#dateFrom").val()
             });
             orderDraw();
             facilityDraw();
         })
-        // 섬유공정스케줄실행 클릭 시 이벤트
-        $('#activationSetting').on('click', function(){
-
-
-
-        });
         // 주문일자에 따른 수주 리스트 불러오기 START
-        $('#ordDateFrom').on('change', function(){ orderDraw(); });
-        $('#ordDateTo').on('change', function(){ orderDraw(); });
+        $('#ordDateFrom').on('change', function() {
+            orderDraw();
+        });
+        $('#ordDateTo').on('change', function() {
+            orderDraw();
+        });
 
         var result_data;
-        function orderSearch(from, to){
+        // 기간 내 처리 가능 오더 조회
+        function orderSearch(from, to) {
             from = from.replace('-', '').replace('-', '');
             to = to.replace('-', '').replace('-', '');
             var obj = new Object();
@@ -284,13 +320,13 @@
             obj.dateTo = to;
             $.ajax({
                 url: "{% url 'order.order_list_search' %}",
-                method:'GET',
+                method: 'GET',
                 dataType: 'json',
-                async:false,
+                async: false,
                 data: JSON.stringify(obj),
                 contentType: 'application/json',
                 processData: false,
-                success: function(result){
+                success: function(result) {
                     result_data = result;
                 }
 
@@ -298,20 +334,20 @@
             return result_data;
         }
 
-        function orderDraw(){
+        function orderDraw() {
             $('#selectOrder').html('');
             var result = orderSearch($('#ordDateFrom').val(), $('#ordDateTo').val());
-            if(result.length>1){
+            if (result.length > 1) {
                 var innerHTML = '<select class="form-control" name="select" multiple="multiple" id="selectOrder" style="width:257px;">';
-                for(var i=0; i<result.length; i++){
-                    if(typeof result[i] !== 'undefined'){
-                        innerHTML += '<option value="' + result[i].order_id + '">' + result[i].prod_name + ' 수량: ' + result[i].amount + ' yd</option>';
+                for (var i = 0; i < result.length; i++) {
+                    if (typeof result[i] !== 'undefined') {
+                        innerHTML += '<option class="' + result[i].amount + "_" + result[i].avail_fac_cnt + '" value="' + result[i].prod_name + '">' + result[i].prod_name + ' 수량: ' + result[i].amount + ' yd</option>';
                     }
                 }
             } else {
                 var innerHTML = '<input type="text" class="form-control" placeholder="해당일에 주문데이터가 없습니다." value="" readonly="readonly" />';
             }
-            $('#divSelectOrder').html(innerHTML);
+            $('#divSelectOrder_old').html(innerHTML);
             $("#selectOrder").multipleSelect({
                 filter: true
             });
@@ -319,26 +355,62 @@
         }
         // 주문일자에 따른 수주 리스트 불러오기 END
 
+        function clickBodyEvent(event) {
+            var target = event.target;
+            if (target == event.currentTarget.querySelector(".modal-body")) {
+                $('#selectOrder_old').html('');
+                var selected_ord = $('#divSelectOrder_old').find(':selected');
+                if (selected_ord.length > 1) {
+                    $('#orderSelectDiv').css('overflow', 'scroll');
+                    $('#orderSelectDiv').css('overflow-x', 'hidden');
+                    $('#orderSelectDiv').css('height', '398px');
+                }
+                var innerHTML = '';
+                for (var i = 0; i < selected_ord.length; i++) {
+                    var amt = selected_ord[i].className.split('_');
+                    var amt_cnt = amt[0]; // 수량
+                    var amt_val = amt[1]; // 기계 대수
+                    if (typeof selected_ord[i].value != 'undefined') {
+                        innerHTML += '<input type="text" id="' + selected_ord[i].value + '" class="col-md-9 form-control ordamt ordamt_' + amt_cnt + '" value="' + selected_ord[i].innerText + '" style="margin-right:1rem;" readonly="readonly" />';
+                        // innerHTML += '<p class="modal-p">※ 제품별 수량에 따라 사용할 기계의 대수를 입력해 주세요.<p/>';
+                        // count
+                        innerHTML += '<input type="text" placeholder="기계 대수 설정" class="col-md-2 form-control setMachineNum" value="' + amt_val + '" /><br/>';
+                        // 기계 선택 (count 수만큼 제한)
+                        innerHTML += '<hr class="hr-modal"/>';
+                    }
+                }
+                $('#divSelectOrder_old').html(innerHTML);
+                $('#divSelectOrder_old').attr('id', 'divSelectOrder');
+                $(".availfacnum").multipleSelect({
+                    filter: true
+                });
+            }
+        }
+
+        $('#divSelectOrder_old').on('click', function(event) {
+            var body = document.querySelector("body");
+            body.addEventListener('click', clickBodyEvent);
+        });
 
         // 작업 시작 일자에 따른 사용 가능 기계 리스트 불러오기 START
-        function facilityDraw(){
+        function facilityDraw() {
             $('#divSelectFac').html('');
             var obj = new Object();
             obj.strDate = $("#strDate").val();
             $.ajax({
                 url: "{% url 'company.comp_avail_facility' %}",
-                method:'GET',
+                method: 'GET',
                 dataType: 'json',
-                async:false,
+                async: false,
                 data: JSON.stringify(obj),
                 contentType: 'application/json',
                 processData: false,
-                success: function(result){
-                    if(result.length>1){
+                success: function(result) {
+                    if (result.length > 1) {
                         var innerHTML = '<select class="form-control" name="select" multiple="multiple" id="availfacnum" style="width:257px;">';
-                        for(var i=0; i<result.length; i++){
-                            if(typeof result[i] !== 'undefined'){
-                                innerHTML += '<option value="' + result[i] + '">' + result[i] + ' 호기</option>';
+                        for (var i = 0; i < result.length; i++) {
+                            if (typeof result[i] !== 'undefined') {
+                                innerHTML += '<option value="' + result[i] + '" selected>' + result[i] + ' 호기</option>';
                             }
                         }
                     } else {
@@ -356,26 +428,26 @@
 
 
         // 작업 시작 일자에 따른 사용 가능 기계 리스트 불러오기 END
-        $("#strDate").on('change', function(){
+        $("#strDate").on('change', function() {
             facilityDraw();
         });
 
-        $('#availfacnum').on('change', function(){
+        $('#availfacnum').on('change', function() {
             var facnum = $('#availfacnum').val();
             var order = $('#selectOrder').val();
             var innerHTML = '<thead>' +
-                                '<tr>'+
-                                '<th></th>';
-            for(var i=1; i<=facnum; i++){
+                '<tr>' +
+                '<th></th>';
+            for (var i = 1; i <= facnum; i++) {
                 innerHTML += '<th>machine ' + i + '</th>';
             }
-            innerHTML +=    '</tr>' +
-                         '</thead>'+
-                         '<tbody>';
-            for(var i=0; i<order.length; i++){
+            innerHTML += '</tr>' +
+                '</thead>' +
+                '<tbody>';
+            for (var i = 0; i < order.length; i++) {
                 innerHTML += '<tr> <td>' + order[i] + '</td>';
-                for(var j=1; j<=facnum; j++){
-                   innerHTML += '<td><input type="text" style="border:none; width:50px;"/></td>';
+                for (var j = 1; j <= facnum; j++) {
+                    innerHTML += '<td><input type="text" style="border:none; width:50px;"/></td>';
                 }
                 innerHTML += '</tr>';
             }
@@ -384,226 +456,240 @@
         })
 
 
-
         var ctx = document.getElementById("myAreaChart");
         var chartset = false;
-            $.ajax({
-                url: "{% url 'draw_graph' %}",
-                method:'GET',
-                dataType: 'json',
-                contentType: 'application/json',
-                processData: false,
-                success: function(result){
-                    var dataset = new Array();
-                    for(var i=0; i<result.length; i++){
-                        dataset.push({
-                            label: result[i].order_id,
-                            backgroundColor: "rgba(78, 115, 223, 0.05)",
-                            borderColor: result[i].sch_color,
-                            fill: false,
-                            responsive: true,
-                            borderWidth : 15,
-                            pointRadius : 0,
-                            data: [
-                                {
-                                    x: result[i].x_axis_1/40,
-                                    y: result[i].y_axis_1,
-                                }, {
-                                    x: result[i].x_axis_2/40,
-                                    y: result[i].y_axis_1,
-                                }
-                            ]
-                        })
-                    }
+        var xmin = 0;
+        var xmax = 0;
+        var ymin = 0;
+        var ymax = 0;
+        var enddate;
+        let date = new Date();
+        $.ajax({
+            url: "{% url 'draw_graph' %}",
+            method: 'GET',
+            dataType: 'json',
+            contentType: 'application/json',
+            processData: false,
+            success: function(result) {
+                var dataset = new Array();
+                var x_min = result[0].work_str_date;
+                enddate = new Date(result[0].work_end_date);
+                for (var i = 0; i < result.length; i++) {
+                    var xmin = new Date(result[0].work_str_date);
+                    if (xmax < result[i].x_axis_2) {xmax = result[i].x_axis_2;}
+                    if (ymax < result[i].y_axis_1) {ymax = result[i].y_axis_1;}
+                    dataset.push({
+                        label: result[i].order_id_num,
+                        backgroundColor: "rgba(78, 115, 223, 0.05)",
+                        borderColor: result[i].sch_color,
+                        fill: false,
+                        responsive: true,
+                        borderWidth: 15,
+                        pointRadius: 0,
+                        data: [{
+                            x: new Date(xmin.setDate(xmin.getDate() + result[i].x_axis_1)), // xmin + (result[i].x_axis_1),
+                            y: result[i].y_axis_1,
+                        }, {
+                            x: new Date(xmin.setDate(xmin.getDate() + result[i].x_axis_2)), // xmin + (result[i].x_axis_2),
+                            y: result[i].y_axis_1,
+                        }]
+                    })
+                }
 
-                    // chart.js 그리기
-                    var scatterChart = new Chart(ctx, {
-                        type: 'line',
-                        data: {
-                            datasets: dataset
-                        },
-                        options: {
-                            // y축 빨간선 표시
-                            annotation: {
-                                annotations: [
-                                {
-                                    drawTime: "afterDatasetsDraw",
-                                    type: "line",
-                                    mode: "vertical",
-                                    scaleID: "x-axis-0",
-                                    value: 26,
-                                    borderWidth: 1,
-                                    borderColor: "red",
-                                    label: {
-                                        content: "작업완료기한 : 12월" + 26 + "일",
-                                        enabled: true,
-                                        position: "top",
-                                        backgroundColor: "rgba(160,170,174,100)",
-                                    },
-                                }
-                                ]
-                            }, // y축 빨간선 표시
-                            animation: {
-                                onComplete: function () {
-                                    var ctx = this.chart.ctx;
-                                    ctx.font = Chart.helpers.fontString(Chart.defaults.global.defaultFontFamily, 'light', Chart.defaults.global.defaultFontFamily);
-                                    ctx.fillStyle = "#4e73df";
-                                    ctx.textAlign = 'center';
-                                    ctx.textBaseline = 'bottom';
+                // chart.js 그리기
+                var scatterChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        datasets: dataset
+                    },
+                    options: {
+                        // y축 빨간선 표시
+                        annotation: {
+                            annotations: [{
+                                drawTime: "afterDatasetsDraw",
+                                type: "line",
+                                mode: "vertical",
+                                scaleID: "x-axis-0",
+                                value: enddate,
+                                borderWidth: 1,
+                                borderColor: "red",
+                                label: {
+                                    content: "작업완료기한 : " + (enddate.getMonth() + 1) + "월" + enddate.getDate() + "일",
+                                    enabled: true,
+                                    position: "top",
+                                    backgroundColor: "rgba(160,170,174,100)",
+                                },
+                            }]
+                        }, // y축 빨간선 표시
+                        animation: {
+                            onComplete: function() {
+                                var ctx = this.chart.ctx;
+                                var cht = this.chart;
+                                ctx.font = Chart.helpers.fontString(Chart.defaults.global.defaultFontFamily, 'light', Chart.defaults.global.defaultFontFamily);
+                                ctx.fillStyle = "#4e73df";
+                                ctx.textAlign = 'center';
+                                ctx.textBaseline = 'bottom';
+                                this.data.datasets.forEach(function(dataset, i) {
+                                    var meta = cht.controller.getDatasetMeta(i);
+                                    meta.data.forEach(function(bar, index){
+                                        var data = dataset.label;
+                                        ctx.fillText(data, bar._model.x, bar._model.y);
+                                    })
 
-                                    this.data.datasets.forEach(function (dataset)
-                                    {
-                                        for (var i = 0; i < dataset.data.length/2; i++) {
-                                            for(var key in dataset._meta)
-                                            {
-                                                var model = dataset._meta[key].data[i]._model;
-                                                var index = dataset._meta[key].controller._config.label.replace('ORD00', '').replace('ORD0', '');
-                                                ctx.fillText(index, model.x, model.y);
-                                            }
-                                        }
-                                    });
-                                }
-                            },
-                            legend : {
-                                display : false
-                            },
-                            scales: {
-                                xAxes: [{
-                                    type: 'linear',
-                                    position: 'bottom',
-                                    scaleLabel: {
-                                        display: false,
-                                        labelString: 'x axis'
-                                    },
-                                    ticks : {
-                                        min: 1,
-                                        max: 31,
-                                        // suggestedMin: 1,
-                                        // maxRotation: 0,
-                                        stepSize : 1
-                                    }
-                                }],
-                                yAxes : [{
-                                    scaleLabel : {
-                                        display : false
-                                    },
-                                    scaleLabel: {
-                                        display: false,
-                                        labelString: 'y axis'
-                                    },
-                                    ticks : {
-                                        beginAtZero :true,
-                                        stepSize : 1,
-                                        max : 9
-                                    }
-                                }]
-                            },
-                            pan: {
-                                enabled: true,
-                                mode: 'x',
-                            },
-                            zoom: {
-                                enabled: true,
-                                mode: 'x',
-                            },
+                                });
+
+                            }
                         },
-                    });
+                        legend: {
+                            display: false
+                        },
+                        scales: {
+                            xAxes: [{
+                                type: 'time',
+                                position: 'bottom',
+                                scaleLabel: {
+                                    display: true,
+                                    labelString: '날짜'
+                                },
+                                // ticks: {
+                                time: {
+                                    unit: 'day',
+                                    unitStepSize: 1,
+                                    displayFormats: {
+                                        'day': 'MM / DD'
+                                    }
+                                    // min: x_min,
+                                    // max: xmin + (xmax/10),
+                                    // suggestedMin: 1,
+                                    // maxRotation: 0,
+                                    // stepSize: 1
+                                }
+                            }],
+                            yAxes: [{
+                                scaleLabel: {
+                                    display: false
+                                },
+                                scaleLabel: {
+                                    display: true,
+                                    labelString: '기계 번호'
+                                },
+                                ticks: {
+                                    beginAtZero: true,
+                                    stepSize: 1,
+                                    max: ymax + 1
+                                }
+                            }]
+                        },
+                        pan: {
+                            enabled: true,
+                            mode: 'x',
+                        },
+                        zoom: {
+                            enabled: true,
+                            mode: 'x',
+                        },
+                    },
+                });
             }
         });
 
         $.ajax({
             url: "{% url 'available_comp' %}",
-            method:'GET',
+            method: 'GET',
             dataType: 'json',
             contentType: 'application/json',
             processData: false,
-            success: function(result){
+            success: function(result) {
                 $.ajax({
                     url: "{% url 'confirmed_order' %}",
-                    method:'GET',
+                    method: 'GET',
                     dataType: 'json',
                     contentType: 'application/json',
                     processData: false,
-                    success: function(data){
-                        var innerHTML='';
-                        if(data.length>0){
-                            for(var i=0; i<data.length; i++){
-                                if(data[i].use_yn == 'Y') {
+                    success: function(data) {
+                        var innerHTML = '';
+                        if (data.length > 0) {
+                            for (var i = 0; i < data.length; i++) {
+                                if (data[i][0].use_yn == 'Y') {
+                                    $('#activationSetting').remove();
                                     $('#sendSchedule').remove();
                                     $('#sendBtn').html('<a href="#" onclick="removeSchedule()" id="removeSchedule"' +
-                                                        'class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">' +
-                                                        '<i class="fas fa-plus-square"></i>&nbsp 초기화</a>');
-                                    console.log(result[i].schedule[0].order_id.toString());
+                                        'class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">' +
+                                        '<i class="fas fa-plus-square"></i>&nbsp 초기화</a>');
                                     /* 추후 삭제 */
-                                    var orderid = result[i].schedule[0].order_id.toString();
+                                    var prod_name = result[i].prod_id.toString();
+                                    var orderid = result[i].order_id_num.toString();
                                     /* 추후 삭제 */
 
-                                    var date = result[i].schedule[0].sch_id.toString()
-                                    var year = date.substring(3,7);
-                                    var month = date.substring(7,9);
-                                    var day = date.substring(9,11);
+                                    var date = result[i].sch_id.toString()
+                                    var year = date.substring(3, 7);
+                                    var month = date.substring(7, 9);
+                                    var day = date.substring(9, 11);
                                     date = year + '-' + month + '-' + day;
-                                    var count = i+1;
+                                    var count = i + 1;
                                     innerHTML += '<tr>' +
-                                                      '<input type="hidden" class="order_id" value="' + result[i].schedule[0].order_id + '" />' +
-                                                      '<input type="hidden" class="sch_id" value="' + result[i].schedule[0].sch_id + '" />' +
-                                                      '<td scope="row">' + count + '</td>' +
-                                                      '<td>' + date + '</td>' +
-                                                      '<td>' + orderid.split('.')[0] + '</td>' +
-                                                      '<td><div style="width:1rem; height:1rem; background-color:' + result[i].schedule[0].sch_color + '"></div></td>' +
-                                                      '<td><div class="checkbox" id="accept-' + count + '" style="font-weight:bold; color:#2e59d9;" />확정</td>' +
-                                                 '</tr>';
+                                        '<input type="hidden" class="order_id" value="' + result[i].order_id + '" />' +
+                                        '<input type="hidden" class="sch_id" value="' + result[i].sch_id + '" />' +
+                                        '<td scope="row">' + count + '</td>' +
+                                        '<td>' + date + '</td>' +
+                                        '<td>' + orderid + '</td>' +
+                                        '<td>' + prod_name + '</td>' +
+                                        '<td><div style="width:1rem; height:1rem; background-color:' + result[i].sch_color + '"></div></td>' +
+                                        '<td><div class="checkbox" id="accept-' + count + '" style="font-weight:bold; color:#2e59d9;" />확정</td>' +
+                                        '</tr>';
                                 } else {
-                                    for(var i=0; i<result.length; i++){
-                                        console.log(result[i]);
-                                        // var orderid = result[i].schedule[0].order_id.toString();
-                                        var orderid = result[i][0].order_id.toString();
-                                        var date = result[i][0].sch_id.toString();
+                                    for (var i = 0; i < result.length; i++) {
+                                        var prod_name = result[i].prod_id.toString();
+                                        var orderid = result[i].order_id_num.toString();
+                                        var date = result[i].sch_id.toString();
                                         // var date = result[i].schedule[0].sch_id.toString();
-                                        var year = date.substring(3,7);
-                                        var month = date.substring(7,9);
-                                        var day = date.substring(9,11);
+                                        var year = date.substring(3, 7);
+                                        var month = date.substring(7, 9);
+                                        var day = date.substring(9, 11);
                                         date = year + '-' + month + '-' + day;
-                                        var count = i+1;
+                                        var count = i + 1;
                                         innerHTML += '<tr>' +
-                                                          '<input type="hidden" class="order_id" value="' + result[i][0].order_id + '" />' +
-                                                          '<input type="hidden" class="sch_id" value="' + result[i][0].sch_id + '" />' +
-                                                          '<td scope="row">' + count + '</td>' +
-                                                          '<td>' + date + '</td>' +
-                                                          '<td>' + orderid.split('.')[0] + '</td>' +
-                                                          '<td><div style="width:1rem; height:1rem; background-color:' + result[i][0].sch_color + '"></div></td>' +
-                                                          '<td><input class="checkbox" id="accept-' + count + '" type="checkbox" checked="checked" value="Y" name="check"/></td>' +
-                                                     '</tr>';
+                                            '<input type="hidden" class="order_id" value="' + result[i].order_id + '" />' +
+                                            '<input type="hidden" class="sch_id" value="' + result[i].sch_id + '" />' +
+                                            '<td scope="row">' + count + '</td>' +
+                                            '<td>' + date + '</td>' +
+                                            '<td>' + orderid + '</td>' +
+                                            '<td>' + prod_name + '</td>' +
+                                            '<td><div style="width:1rem; height:1rem; background-color:' + result[i].sch_color + '"></div></td>' +
+                                            '<td><input class="checkbox" id="accept-' + count + '" type="checkbox" checked="checked" value="Y" name="check"/></td>' +
+                                            '</tr>';
                                     }
                                 }
                             }
                         } else {
-                            for(var i=0; i<result.length; i++){
+                            for (var i = 0; i < result.length; i++) {
                                 /* 추후 삭제 */
-                                var orderid = result[i][0].order_id.toString();
+                                var prod_name = result[i][0].prod_id.toString();
+                                var orderid = result[i][0].order_id_num.toString();
                                 /* 추후 삭제 */
                                 var date = result[i][0].sch_id.toString();
-                                var year = date.substring(3,7);
-                                var month = date.substring(7,9);
-                                var day = date.substring(9,11);
+                                var year = date.substring(3, 7);
+                                var month = date.substring(7, 9);
+                                var day = date.substring(9, 11);
                                 date = year + '-' + month + '-' + day;
-                                var count = i+1;
+                                var count = i + 1;
                                 innerHTML += '<tr>' +
-                                                  '<input type="hidden" class="order_id" value="' + result[i][0].order_id + '" />' +
-                                                  '<input type="hidden" class="sch_id" value="' + result[i][0].sch_id + '" />' +
-                                                  '<td scope="row">' + count + '</td>' +
-                                                  '<td>' + date + '</td>' +
-                                                  '<td>' + orderid.split('.')[0] + '</td>' +
-                                                  '<td><div style="width:1rem; height:1rem; background-color:' + result[i][0].sch_color + '"></div></td>' +
-                                                  '<td><input class="checkbox" id="accept-' + count + '" type="checkbox" checked="checked" value="Y" name="check"/></td>' +
-                                             '</tr>';
+                                    '<input type="hidden" class="order_id" value="' + result[i][0].order_id + '" />' +
+                                    '<input type="hidden" class="sch_id" value="' + result[i][0].sch_id + '" />' +
+                                    '<td scope="row">' + count + '</td>' +
+                                    '<td>' + date + '</td>' +
+                                    '<td>' + orderid + '</td>' +
+                                    '<td>' + prod_name + '</td>' +
+                                    '<td><div style="width:1rem; height:1rem; background-color:' + result[i][0].sch_color + '"></div></td>' +
+                                    '<td><input class="checkbox" id="accept-' + count + '" type="checkbox" checked="checked" value="Y" name="check"/></td>' +
+                                    '</tr>';
                             }
                         }
                         $('#order_body').html(innerHTML);
                     } /* data ajax */
-                }).done(function(d){
-                    $('input:checkbox[name="check"]').on('change', function(){
-                        if($(this).val()=='Y'){
+                }).done(function(d) {
+                    $('input:checkbox[name="check"]').on('change', function() {
+                        if ($(this).val() == 'Y') {
                             $(this).val('N');
                         } else {
                             $(this).val('Y');
@@ -616,59 +702,61 @@
         // schedule_history
         $.ajax({
             url: "{% url 'schedule_history' %}",
-            method:'GET',
+            method: 'GET',
             dataType: 'json',
             contentType: 'application/json',
             processData: false,
-            success: function(result){
-                var innerHTML='';
-                for(var i=0; i<result.length; i++){
+            success: function(result) {
+                var innerHTML = '';
+                for (var i = 0; i < result.length; i++) {
                     /* 추후 삭제 */
-                    var orderid = result[i].schedule[0].order_id.toString();
+                    var orderid = result[i].schedule[0].order_id_num.toString();
                     var date = result[i].schedule[0].sch_id.toString();
-                    var year = date.substring(3,7);
-                    var month = date.substring(7,9);
-                    var day = date.substring(9,11);
+                    var year = date.substring(3, 7);
+                    var month = date.substring(7, 9);
+                    var day = date.substring(9, 11);
                     date = year + '-' + month + '-' + day;
 
                     /* 추후 삭제 */
-                    var count = i+1;
-                    if(result[i].use_yn == 'Y'){
+                    var count = i + 1;
+                    if (result[i].use_yn == 'Y') {
                         innerHTML += '<tr>' +
-                                      '<input type="hidden" class="fixed_order_id" value="' + result[i].schedule[0].order_id + '" />' +
-                                      '<td scope="row">' + count + '</td>' +
-                                      '<td>' + date + '</td>' +
-                                      '<td>' + orderid.split('.')[0] + '</td>' +
-                                      '<td><div style="width:1rem; height:1rem; background-color:' + result[i].schedule[0].sch_color + '"></div></td>' +
-                                      '<td>확정</td>' +
-                                 '</tr>';
+                            '<input type="hidden" class="fixed_order_id" value="' + result[i].schedule[0].order_id + '" />' +
+                            '<td scope="row">' + count + '</td>' +
+                            '<td>' + date + '</td>' +
+                            '<td>' + orderid.split('.')[0] + '</td>' +
+                            '<td><div style="width:1rem; height:1rem; background-color:' + result[i].schedule[0].sch_color + '"></div></td>' +
+                            '<td>확정</td>' +
+                            '</tr>';
                     } else {
                         innerHTML += '<tr>' +
-                                      '<input type="hidden" class="fixed_order_id" value="' + result[i].schedule[0].order_id + '" />' +
-                                      '<td scope="row">' + count + '</td>' +
-                                      '<td>' + result[i].schedule[0].created_at + '</td>' +
-                                      '<td>' + orderid.split('.')[0] + '</td>' +
-                                      '<td><div style="width:1rem; height:1rem; background-color:' + result[i].schedule[0].sch_color + '"></div></td>' +
-                                      '<td>미사용</td>' +
-                                 '</tr>';
+                            '<input type="hidden" class="fixed_order_id" value="' + result[i].schedule[0].order_id + '" />' +
+                            '<td scope="row">' + count + '</td>' +
+                            '<td>' + result[i].schedule[0].created_at + '</td>' +
+                            '<td>' + orderid.split('.')[0] + '</td>' +
+                            '<td><div style="width:1rem; height:1rem; background-color:' + result[i].schedule[0].sch_color + '"></div></td>' +
+                            '<td>미사용</td>' +
+                            '</tr>';
                     }
 
                 }
                 $('#fixed_order_body').html(innerHTML);
             }
         });
-        $('#searchBtn').on('click',function(){
+        $('#searchBtn').on('click', function() {
             doSearch(
-              $('#dateFrom').val().replace(/\-/g,''),
-              $('#dateTo').val().replace(/\-/g,'')
+                $('#dateFrom').val().replace(/\-/g, ''),
+                $('#dateTo').val().replace(/\-/g, '')
             );
         })
 
-        function doSearch(dateFrom, dateTo){
+        function doSearch(dateFrom, dateTo) {
             $.when(
-               $.ajax({url: "{% url 'schedule_history' %}"})
-            ).then(function(_data){
-                for(var idx in _data){
+                $.ajax({
+                    url: "{% url 'schedule_history' %}"
+                })
+            ).then(function(_data) {
+                for (var idx in _data) {
                     console.log(_data);
                 }
                 $('#css-loader').removeClass("is-active");

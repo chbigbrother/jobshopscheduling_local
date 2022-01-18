@@ -21,14 +21,14 @@ class Schedule(models.Model):
     sch_id = models.CharField(max_length=50, primary_key=True)
     comp_id = models.ForeignKey("Information", related_name="company_id", on_delete=models.CASCADE, db_column="comp_id")
     count = models.IntegerField(null=False)
-    order_id = models.CharField(max_length=120)
+    prod_id = models.CharField(max_length=120)
+    order_id_num = models.CharField(max_length=120)
     facility_id = models.ForeignKey("Facility", related_name="facilityId", on_delete=models.CASCADE, db_column="facility_id")  # 회사아이디
     created_at = models.DateTimeField(auto_now_add=True)  # 생성일자
     sch_color = models.CharField(max_length=50, null=False)
     x_axis_1 = models.FloatField(null=False)
-    y_axis_1 = models.FloatField(null=False)
     x_axis_2 = models.FloatField(null=False)
-    y_axis_2 = models.FloatField(null=False)
+    y_axis_1 = models.FloatField(null=False)
     work_str_date = models.CharField(max_length=12, null=False)
     work_end_date = models.CharField(max_length=12, null=False)
     created_at = models.DateTimeField(auto_now_add=True)

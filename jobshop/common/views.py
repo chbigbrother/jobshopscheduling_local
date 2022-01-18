@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from datetime import datetime
 
 # Create your views here.
 def id_generate(request, id):
@@ -20,7 +21,27 @@ def id_generate(request, id):
 
     return str_id
 
+def comma_str(data):
+    commas = ''
+    for i in range(len(data)):
+        if len(data) == 1:
+            commas += data[i]
+        else:
+            if i == len(data)-1:
+                commas += data[i]
+            else:
+                commas += data[i] + ', '
+
+    return commas
+
 def date_str(date):
     str_date = date[0:4] + '-' + date[4:6] + '-' + date[6:8]
 
     return str_date
+
+def calc_date_str(datefrom, dateto):
+    date_from = datetime.strptime(datefrom, "%Y%m%d")
+    date_to = datetime.strptime(dateto, "%Y%m%d")
+    date_diff = date_to - date_from
+
+    return date_diff

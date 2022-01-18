@@ -5,7 +5,7 @@ from django.contrib.auth.models import User, Group
 from django.http import JsonResponse
 from django.http.response import HttpResponse
 from .sslstm import sslstm
-from common.views import id_generate, date_str
+from common.views import id_generate, date_str, calc_date_str, comma_str
 from company.models import *
 from order.models import *
 import pandas as pd
@@ -15,6 +15,7 @@ from calendar import monthrange
 from bson import json_util
 from random import randint
 
+now = datetime.datetime.now()
 # 스케쥴링실행 Execute Schedule HTML
 def home(request):
     date = datetime.datetime.today() - timedelta(days=3)
@@ -34,36 +35,38 @@ def history(request):
         date_from = request.GET['dateFrom'].replace('-', '')
         date_to = request.GET['dateTo'].replace('-', '')
         schedule_list = Schedule.objects.raw(
-            "SELECT sch_id, SUBSTRING(sch_id, 4, 8) as exe_date, SUBSTRING_INDEX(order_id, '.', 1) AS orderid, max(COUNT) as max_count " +
-            "FROM company_schedule " +
-            "WHERE SUBSTRING(sch_id, 4, 8) >= '" + date_from + "' AND "
+            " SELECT sch_id, SUBSTRING(sch_id, 4, 8) as exe_date, max(COUNT) as max_count " +
+            " FROM company_schedule " +
+            " WHERE SUBSTRING(sch_id, 4, 8) >= '" + date_from + "' AND "
                     "SUBSTRING(sch_id, 4, 8) <= '" + date_to + "'" +
-            "GROUP BY order_id")
+            ' GROUP BY STR_TO_DATE(created_at, "%%Y-%%m-%%d")')
     else:
         sch_date_from = date
         sch_date_to = datetime.datetime.today()
         schedule_list = Schedule.objects.raw(
-            "SELECT *, SUBSTRING(sch_id, 4, 8) as exe_date, SUBSTRING_INDEX(order_id, '.', 1) AS orderid, max(COUNT) as max_count " +
+            "SELECT *, SUBSTRING(sch_id, 4, 8) as exe_date, max(COUNT) as max_count " +
             "FROM company_schedule " +
             "WHERE SUBSTRING(sch_id, 4, 8) >= '" + date.strftime("%Y%m%d") + "' AND "
             "SUBSTRING(sch_id, 4, 8) <= '" + datetime.datetime.today().strftime( "%Y%m%d") + "'" +
-            "GROUP BY order_id")
-
+            ' GROUP BY STR_TO_DATE(created_at, "%%Y-%%m-%%d")')
 
     sch_list = []
+    order_id = ''
     for sch in schedule_list:
         sch_dict = {}
-        sch_dict['orderid'] = sch.orderid
         sch_dict['max_count'] = sch.max_count
         sch_dict['exe_date'] = date_str(sch.exe_date)
         sch_dict['work_end_date'] = date_str(sch.work_end_date)
-        order_list = OrderList.objects.filter(order_id=sch.order_id)
+        sch_dict['date_from'] = sch_date_from.strftime("%Y-%m-%d")
+        sch_dict['date_to'] = sch_date_to.strftime("%Y-%m-%d")
+        order_list = OrderList.objects.filter(prod_id=sch.prod_id)
+        order_id = date_str(sch.exe_date)
+
         for i in order_list:
             sch_dict['sch_date'] = date_str(i.sch_date)
-            sch_dict['prod_name'] = i.prod_id.prod_name
 
+        sch_dict['orderid'] = order_id
         sch_list.append(sch_dict)
-
 
     date = {
         'dateFrom': sch_date_from.strftime("%Y-%m-%d"),
@@ -74,27 +77,54 @@ def history(request):
     return render(request, 'schedule/sch_history.html', date)
 
 # 스케쥴링이력 간트차트 Schedule history in Gantt Chart HTML
-def history_chart(request, id):
-    schedule_list = Schedule.objects.raw("SELECT *, SUBSTRING_INDEX(order_id, '.', 1) AS orderid, max(COUNT) as max_count " +
-                                            "FROM company_schedule " +
-                                            "GROUP BY SUBSTRING(sch_id, 4, 8), SUBSTRING(order_id, 4, 3)")
-    sch_list = []
-    for sch in schedule_list:
-        sch_dict = {}
-        sch_dict['orderid'] = sch.orderid
-        sch_dict['max_count'] = sch.max_count
-        sch_date = OrderList.objects.filter(order_id=sch.orderid)
-
-
-        sch_list.append(sch_dict)
-
+def history_chart(request, id, schDate):
     date = datetime.datetime.today() - timedelta(days=3)
+
     date = {
         'dateFrom': date.strftime("%Y-%m-%d"),
+        'id' : id,
+        'schDate' : schDate,
         'path': '스케쥴링 / 스케쥴링이력',
-        'sch_list' : sch_list
     }
     return render(request, 'schedule/sch_history_chart.html', date)
+
+# 스케쥴링이력 간트차트 그리기
+def draw_history_chart(request):
+
+    for i in request.GET:
+        request = json.loads(i)
+
+    id = request['orderId']
+    schDate = request['schDate']
+
+    sch_list, count = schedule_list(id, schDate)
+    result = {}
+    result_list = []
+    final_list = []
+
+    for cnt in range(int(count)+1):
+        result['max_count'] = int(cnt)+1
+        for sch in sch_list:
+            if sch.count == int(cnt)+1:
+                result_dict = {}
+                result_dict['facility_id'] = sch.facility_id.facility_name
+                result_dict['order_id_num'] = sch.order_id_num
+                result_dict['count'] = sch.count
+                result_dict['sch_color'] = sch.sch_color
+                result_dict['x_axis_1'] = sch.x_axis_1
+                result_dict['y_axis_1'] = sch.y_axis_1
+                result_dict['work_str_date'] = date_str(sch.work_str_date)
+                result_dict['work_end_date'] = date_str(sch.work_end_date)
+                result_list.append(result_dict)
+        result['chart_draw'] = result_list
+    final_list.append(result)
+
+    def json_default(value):
+        if isinstance(value, datetime.datetime):
+            return value.strftime('%Y-%m-%d')
+        raise TypeError('not JSON serializable')
+
+    return HttpResponse(json.dumps(final_list, default=json_default, ensure_ascii=False), content_type="application/json")
 
 # 확정 스케쥴 Fixed Schedule HTML
 def sch_confirmed(request):
@@ -104,27 +134,45 @@ def sch_confirmed(request):
     month = date[4:6]
 
     lastday = calendar.monthrange(int(year), int(month))[1]
-    final_result = Schedule.objects.filter(work_end_date__gte=date)
+    final_result = OrderSchedule.objects.filter(sch_id__work_end_date__gte=date, use_yn='Y')
     available_list = []
     for i in final_result:
         available_dict = {}
-        available_dict['work_str_date'] = i.work_str_date
-        available_dict['work_end_date'] = i.work_end_date
-
-        querySet = OrderSchedule.objects.filter(sch_id=i.sch_id)
-        if len(querySet.values()) > 0:
-            for j in querySet:
-                available_dict['order_id'] = j.order_id_id
-                orderlist = OrderList.objects.get(order_id=j.order_id_id)
-                available_dict['sch_date'] = orderlist.sch_date
-                available_dict['sch_id'] = j.sch_id_id
-                available_list.append(available_dict)
+        available_dict['work_str_date'] = date_str(i.sch_id.work_str_date)
+        available_dict['work_end_date'] = date_str(i.sch_id.work_end_date)
+        available_dict['order_id'] = i.order_id_id
+        orderlist = OrderList.objects.get(order_id=i.order_id_id)
+        available_dict['sch_date'] = date_str(orderlist.sch_date)
+        available_dict['sch_id'] = i.sch_id
+        available_list.append(available_dict)
 
     date = {
         'order_list': available_list,
         'path': '스케쥴링 / 확정스케쥴조회'
     }
     return render(request, 'schedule/sch_confirmed.html', date)
+
+def schedule_list(id, schDate):
+
+    date_from = id.replace('-', '')
+
+    schedule_list = Schedule.objects.raw(
+        "SELECT * " +
+        "FROM company_schedule " +
+        "WHERE SUBSTRING(sch_id, 4, 8) = '" + date_from + "' ")
+
+    count = Schedule.objects.raw(
+        ' SELECT sch_id, MAX(COUNT) ' +
+        ' FROM company_schedule' +
+        ' WHERE SUBSTRING(sch_id, 4, 8) = "' + date_from + '"')
+    sch_list = []
+    for i in schedule_list:
+        sch_list.append(i)
+    for j in count:
+        count = j.count
+
+    return sch_list, count
+
 
 # 수락한 오더 리스트 조회 (월별)
 def monthly_confirmed_order(request):
@@ -138,25 +186,22 @@ def monthly_confirmed_order(request):
         end_year = request['end_year']
         end_month = request['end_month']
 
-        final_result = Schedule.objects.filter(work_str_date__gte=str(str_year) + str(str_month) + '01').filter(work_end_date__lte=str(end_year) + str(end_month) + '01')
+        final_result = OrderSchedule.objects.filter(sch_id__work_end_date__lte=str(end_year) + str(end_month) + '01', use_yn='Y')
     else:
         year = date[0:4]
         month = date[4:6]
 
         lastday = calendar.monthrange(int(year), int(month))[1]
-        final_result = Schedule.objects.filter(work_str_date__gte=date + '01').filter(
-            work_end_date__lte=date + str(lastday))
+        final_result = OrderSchedule.objects.filter(sch_id__work_str_date__gte=date + '01').filter(
+            sch_id__work_end_date__lte=date + str(lastday), use_yn='Y')
 
     for i in final_result:
         available_dict = {}
-        available_dict['work_str_date'] = i.work_str_date
-        available_dict['work_end_date'] = i.work_end_date
-        querySet = OrderSchedule.objects.filter(sch_id=i.sch_id)
-        if len(querySet.values()) > 0:
-            for j in querySet:
-                available_dict['order_id'] = j.order_id_id
-                available_dict['sch_id'] = j.sch_id_id
-                available_list.append(available_dict)
+        available_dict['work_str_date'] = i.sch_id.work_str_date
+        available_dict['work_end_date'] = i.sch_id.work_end_date
+        available_dict['order_id'] = i.order_id_id
+        available_dict['sch_id'] = i.sch_id_id
+        available_list.append(available_dict)
 
     def json_default(value):
         if isinstance(value, datetime.datetime):
@@ -167,83 +212,158 @@ def monthly_confirmed_order(request):
 
 # draw Gantt Chart data
 def draw_graph(request):
-    count = Schedule.objects.filter(comp_id=request.user.groups.values('id')[0]['id'])
+    count = Schedule.objects.filter(comp_id=request.user.groups.values('id')[0]['id'],
+                                    created_at__year=now.year, created_at__month=now.month, created_at__day=now.day)
+
     count = count.aggregate(Max('count'))
     for i in Group.objects.all():
         for j in Group.objects.filter(name=i).values():
-            schedule_list = Schedule.objects.filter(count=count['count__max'])
+            schedule_list = Schedule.objects.filter(count=count['count__max'],
+                                    created_at__year=now.year, created_at__month=now.month, created_at__day=now.day)
             schedule_list = list(schedule_list.values())
+    for i in range(len(schedule_list)):
+        fac_name = Facility.objects.get(facility_id=schedule_list[i]['facility_id_id'])
+        schedule_list[i]['work_str_date'] = date_str(schedule_list[i]['work_str_date'])
+        schedule_list[i]['work_end_date'] = date_str(schedule_list[i]['work_end_date'])
+        schedule_list[i]['y_axis_1'] = fac_name.facility_name
+
+
     def json_default(value):
         if isinstance(value, datetime.datetime):
             return value.strftime('%Y-%m-%d')
         raise TypeError('not JSON serializable')
+
     # print(json.dumps(schedule_list, default=json_default))
     return HttpResponse(json.dumps(schedule_list, default=json_default))
 
+# JSSP 스케쥴링 실행
 # x, y 축 저장 Save x, y axis into Database
-def update_graph(request):
+def generate_data(request):
+    # 회사 아이디를 얻기 위한 유저 정보
+    user_id = request.user.groups.values('id')[0]['id']
+    
+    data = open("./schedule/dytech/new_coming.csv", "w", encoding="UTF-8")
+    product_list = []   # 제품 리스트 (Queryset 담기)
+    product_name_list = []  # 제품명 리스트
+    facility_list = []  # 기계 리스트 (Queryset 담기)
+    avail_list = []     # 사용 가능한 기계 대수
+    column = []         
+    rows = ["작업 호기", "제품명", "실제 기계 밀도", "RPM", "생산량(YD)"]
+    column.append(rows)
+    
+    # POST 로 받아온 값 dict 로 담기
+    if request.method == 'POST':
+        request = json.loads(request.body)
+        ord = request['ord']    # 제품명
+        fac = request['fac']    # 기계호기
+        amt = request['amt']    # 오더 수량
+        avail_fac_num = request['avail_fac_num'] # 사용 가능한 기계 대수
+        work_str = request['work_str_date'].replace('-', '').replace('-', '')       # 작업시작일자
+        work_exp_date = request['work_exp_date'].replace('-', '').replace('-', '')  # 작업종료일자
+
+    # 엑셀 생성시 사용 가능한 기계 대수를 수량만큼 나눠서 추가해주기
+    # 1. 선택한 기계만큼 사용가능한 기계 대수 안에서 rand 돌리기
+    writer = csv.writer(data)
+    for i in ord:
+        product_name = Product.objects.get(prod_name=i)
+        product_name = product_name.prod_name
+        product_list.append(Product.objects.get(prod_name=i))
+        product_name_list.append(product_name)
+
+    for f in fac:
+        facility_name = Facility.objects.get(facility_id=f.replace('호기', ''))
+        facility_name = facility_name.facility_name
+        facility_list.append(facility_name)
+
+    for i in range(len(product_list)):
+        avail_rand_list = [random.choice(facility_list) for k in range(int(avail_fac_num[i]))]
+        value = (int(amt[i]) // int(avail_fac_num[i]))
+        rest = (int(amt[i]) % int(avail_fac_num[i]))
+        last_num = len(avail_rand_list) -1
+        if rest > 0:
+            avail_rand_list = [random.choice(facility_list) for k in range(int(avail_fac_num[i])+ 1)]
+            for j in range(len(avail_rand_list)):
+                if j == last_num:
+                    rows = []
+                    rows.append(avail_rand_list[j])  # 작업 호기
+                    rows.append(product_list[i].prod_name)  # 제품명
+                    rows.append(product_list[i].density)  # 실제 기계 밀도
+                    rows.append(product_list[i].rpm)  # RPM
+                    rows.append(rest)  # 생산량(YD)
+                    column.append(rows)
+                else:
+                    rows = []
+                    rows.append(avail_rand_list[j])  # 작업 호기
+                    rows.append(product_list[i].prod_name)  # 제품명
+                    rows.append(product_list[i].density)  # 실제 기계 밀도
+                    rows.append(product_list[i].rpm)  # RPM
+                    rows.append(value)  # 생산량(YD)
+                    column.append(rows)
+        else:
+            for j in range(len(avail_rand_list)):
+                rows = []
+                rows.append(avail_rand_list[j])  # 작업 호기
+                rows.append(product_list[i].prod_name)  # 제품명
+                rows.append(product_list[i].density)  # 실제 기계 밀도
+                rows.append(product_list[i].rpm)  # RPM
+                rows.append(value)  # 생산량(YD)
+                column.append(rows)
+
+
+
+    # 리스트 형식의 데이터가 있는 경우 루프를 돌려서 입력 가능
+    for col in column:
+        writer.writerow(col)
+
+    data.close()
+    result = sslstm(request)  # ss-lstm 실행
 
     # 회사명, 취급 섬유 유형 종류, 오더한 사람이 요청한 섬유 유형 종류
-    orders = OrderList.objects.filter(sch_date=datetime.datetime.today().strftime("%Y%m%d"))
-    textile_dict = {}
-    order_list = []
-    comp_list = Facility.objects.all()
-    comp_ids = []
-    for ord in orders:
-        order_list.append(ord.order_id)
-        textile_dict[ord.order_id] = ord.textile_type
-
-    count = Schedule.objects.all()
+    count = Schedule.objects.filter()
+    count = Schedule.objects.filter(created_at__year=now.year, created_at__month=now.month, created_at__day=now.day)
     count = count.aggregate(Max('count'))
     count = str(count['count__max'])
+
     if count == 'None':
         count = '0'
 
-    for i in textile_dict.keys():
-        for comp in comp_list:
-            print(comp.textile_type)
-            print(textile_dict[i])
-            if comp.textile_type.find(textile_dict[i]) != -1:
-                comp_ids.append(comp.comp_id)
+    keys_list = []  # 'color', 'order_id_num', 'machine_num', 'x1', 'y1'
+    for i in result.keys():
+        keys_list.append(i)
 
-        random.shuffle(comp_ids)
-        random_comp_list = comp_ids[0]
-        result = {}
-        result = sslstm(request) # ss-lstm 실행
-        keys_list = []
-        for i in result.keys():
-            keys_list.append(i)
+    list = []
+    for i in range(len(result['color'])):
+        line = []
+        for keys in keys_list:
+            line.append(result[keys][i])
+        list.append(line)
 
-        list = []
-        for i in range(len(result['id'])):
-            line = []
-            for keys in keys_list:
-                line.append(result[keys][i])
-            list.append(line)
-        for i in range(len(list)):
-            order_number = str(list[i][6]).split('.')
-            for j in range(len(list[i])):
-                print('d')
-                    # Schedule.objects.update_or_create(
-                    #     sch_id='SCH' + list[i][0] + str(list[i][1])[2:3] + count,
-                    #     comp_id=Information.objects.get(comp_id=request.user.groups.values('id')[0]['id']),
-                    #     count=int(count) + 1,
-                    #     sch_color=list[i][1],
-                    #     order_id=str(order_list[int(order_number[0]) - 1]) + '.' + order_number[1],  # 추후 오더 데이터에서 가져오기
-                    #     x_axis_1=list[i][2],
-                    #     x_axis_2=list[i][3],
-                    #     y_axis_1=list[i][4],
-                    #     y_axis_2=list[i][5]
-                    # )
-        break
+    # sch_id    comp_id    facility_id     count     order_id_num     x_axis_1    y_axis_1    work_str_date   work_end_date
+    for i in range(len(list)):
+        sch_id_cnt = len(Schedule.objects.all())
+        product_id = Product.objects.get(prod_name=product_name_list[int(list[i][2][:1])-1])
+        y_axis = list[i][6]
+        Schedule.objects.update_or_create(
+            sch_id='SCH' + list[i][0] + str(int(sch_id_cnt) + 1),
+            facility_id=Facility.objects.get(facility_name=y_axis),
+            comp_id=Information.objects.get(comp_id=user_id),
+            prod_id=product_id.prod_id,
+            count=int(count) + 1,
+            sch_color=list[i][1],
+            order_id_num=list[i][2],  # 추후 오더 데이터에서 가져오기
+            x_axis_1=list[i][4],
+            x_axis_2=list[i][5],
+            y_axis_1=y_axis,
+            work_str_date=work_str,
+            work_end_date=work_exp_date
+        )
+
 
     return JsonResponse({"message": 'success'})
 
+
 # 처리 가능 오더 리스트 표출
 def available_comp(request):
-    # template_name = 'main/index.html'
-    # available_list = Schedule.objects.filter(x_axis_1__lt='987')
-    # available_list = list(available_list.values('sch_id')) # group by 맨 뒷자리, 갯수로 나눠서 3개만 나오게하기
     result = available_list(request)
 
     def json_default(value):
@@ -253,25 +373,50 @@ def available_comp(request):
     # print(json.dumps(schedule_list, default=json_default))
     return HttpResponse(json.dumps(result, default=json_default))
 
-# 처리 가능 오더 리스트 추출
+# 처리 가능 오더 리스트 추출 (작업 완료 기한 기준)
 def available_list(request):
     color_list = []
     final_list = []
     dict_list = []
     result = []
-
-    if len(fixed_list(request))!=0:
+    now = datetime.datetime.now();
+    # 당일 확정 스케쥴 존재 시
+    if len(fixed_list(request))>0:
         for i in fixed_list(request):
-            if i['use_yn'] == 'Y':
-                result.append(i)
+            if i['use_yn'] == 'Y' and i['schedule'] is not None:
+                for j in i['schedule']:
+                    product_ids = j['prod_id']
+                    product_id = Product.objects.get(prod_id=product_ids)
+                    order_id = OrderList.objects.filter(prod_id=product_ids)
+                    order_num = ''
+                    comma_list = []
+                    for k in order_id.values():
+                        comma_list.append(k['order_id'])
+
+                    prod_name = product_id.prod_name
+                    j['prod_id'] = prod_name
+                    j['order_id_num'] = comma_str(comma_list)
+                    result.append(j)
             else:
-                count = Schedule.objects.filter(comp_id=request.user.groups.values('id')[0]['id'])
-                count = count.aggregate(Max('count'))
+                sch_list = Schedule.objects.filter(comp_id=request.user.groups.values('id')[0]['id'],
+                                                   created_at__year=now.year, created_at__month=now.month,
+                                                   created_at__day=now.day)
+                count = sch_list.aggregate(Max('count'))
                 count = str(count['count__max'])
+                sch_list = Schedule.objects.filter(comp_id=request.user.groups.values('id')[0]['id'],
+                                                   created_at__year=now.year, created_at__month=now.month,
+                                                   created_at__day=now.day, count=count)
+                date_diff = calc_date_str(sch_list[0].work_str_date, sch_list[0].work_end_date)
+
                 available_list = Schedule.objects.raw(
-                    'SELECT sch_color, sch_id FROM company_schedule WHERE x_axis_2 < 1040 AND count = ' +
-                    count + ' AND comp_id=' + str(
-                        request.user.groups.values('id')[0]['id']) + ' GROUP BY sch_color HAVING COUNT(sch_color)=10')
+                    'SELECT sch_color, sch_id FROM company_schedule WHERE x_axis_2 < ' + str(date_diff.days) +
+                    ' AND x_axis_2 < ' + str(date_diff.days) + ' AND count=' + count +
+                    ' AND comp_id=' + str(request.user.groups.values('id')[0]['id']) +
+                    ' AND STR_TO_DATE(created_at, "%%Y-%%m-%%d")= "' + now.strftime('%Y-%m-%d') + '"' +
+                    ' AND prod_id NOT IN (SELECT prod_id FROM company_schedule WHERE x_axis_2 >' + str(date_diff.days) +
+                    ' OR x_axis_1 >' + str(date_diff.days) +
+                    ' AND count= ' + count + ' AND comp_id=' + str(request.user.groups.values('id')[0]['id']) +
+                    ') GROUP BY sch_color')
 
                 color_list = []
                 final_list = []
@@ -291,29 +436,67 @@ def available_list(request):
                 for i in dict_list:
                     schedule_list = Schedule.objects.filter(sch_id=i)
                     result.append(list(schedule_list.values()))
+
+                for i in range(len(result)):
+                    product_ids = result[i][0]['prod_id']
+                    product_id = Product.objects.get(prod_id=product_ids)
+                    order_id = OrderList.objects.filter(prod_id=product_ids)
+                    comma_list = []
+                    for j in order_id.values():
+                        comma_list.append(j['order_id'])
+
+                    prod_name = product_id.prod_name
+                    result[i][0]['prod_id'] = prod_name
+                    result[i][0]['order_id_num'] = comma_str(comma_list)
+
+
     else:
-        count = Schedule.objects.filter(comp_id=request.user.groups.values('id')[0]['id'])
-        count = count.aggregate(Max('count'))
-        count = str(count['count__max'])
-        available_list = Schedule.objects.raw(
-            'SELECT sch_color, sch_id FROM company_schedule WHERE x_axis_2 < 1040 AND count = ' +
-            count + ' AND comp_id=' + str(request.user.groups.values('id')[0]['id']) + ' GROUP BY sch_color HAVING COUNT(sch_color)=10')
+        # 당일 확정 스케쥴이 존재하지 않을 때
+        sch_list = Schedule.objects.filter(comp_id=request.user.groups.values('id')[0]['id'],
+                                        created_at__year=now.year, created_at__month=now.month, created_at__day=now.day)
 
+        if len(sch_list) > 0:
+            count = sch_list.aggregate(Max('count'))
+            count = str(count['count__max'])
+            sch_list = Schedule.objects.filter(comp_id=request.user.groups.values('id')[0]['id'],
+                                        created_at__year=now.year, created_at__month=now.month, created_at__day=now.day, count=count)
+            date_diff = calc_date_str(sch_list[0].work_str_date, sch_list[0].work_end_date)
+            available_list = Schedule.objects.raw(
+                'SELECT sch_color, sch_id FROM company_schedule WHERE x_axis_2 < ' + str(date_diff.days) +
+                ' AND x_axis_2 < ' + str(date_diff.days) + ' AND count=' + count +
+                ' AND comp_id=' + str(request.user.groups.values('id')[0]['id']) +
+                ' AND STR_TO_DATE(created_at, "%%Y-%%m-%%d")= "' + now.strftime('%Y-%m-%d') + '"'+
+                ' AND prod_id NOT IN (SELECT prod_id FROM company_schedule WHERE x_axis_2 >' + str(date_diff.days) +
+                ' OR x_axis_1 >'  + str(date_diff.days) +
+                ' AND count= ' + count + ' AND comp_id=' + str(request.user.groups.values('id')[0]['id']) +
+                ') GROUP BY sch_color')
 
-        for p in available_list:
-            color_list.append(p.sch_color)
+            for p in available_list:
+                color_list.append(p.sch_color)
 
-        for i in color_list:
-            # color = Schedule.objects.raw('SELECT * FROM company_schedule WHERE sch_color = "' +  i + '" GROUP BY sch_color HAVING MAX(sch_id)')
-            color = Schedule.objects.filter(sch_color=i, comp_id=request.user.groups.values('id')[0]['id'])
-            final_list.append(color.aggregate(Max('sch_id')))
+            for i in color_list:
+                # color = Schedule.objects.raw('SELECT * FROM company_schedule WHERE sch_color = "' +  i + '" GROUP BY sch_color HAVING MAX(sch_id)')
+                color = Schedule.objects.filter(sch_color=i, comp_id=request.user.groups.values('id')[0]['id'])
+                final_list.append(color.aggregate(Max('sch_id')))
 
-        for i in range(len(final_list)):
-            dict_list.append(final_list[i]['sch_id__max'])
+            for i in range(len(final_list)):
+                dict_list.append(final_list[i]['sch_id__max'])
 
-        for i in dict_list:
-            schedule_list = Schedule.objects.filter(sch_id=i)
-            result.append(list(schedule_list.values()))
+            for i in dict_list:
+                schedule_list = Schedule.objects.filter(sch_id=i)
+                result.append(list(schedule_list.values()))
+
+            for i in range(len(result)):
+                product_ids=result[i][0]['prod_id']
+                product_id=Product.objects.get(prod_id=product_ids)
+                order_id=OrderList.objects.filter(prod_id=product_ids)
+                comma_list = []
+                for j in order_id.values():
+                    comma_list.append(j['order_id'])
+
+                prod_name=product_id.prod_name
+                result[i][0]['prod_id'] = prod_name
+                result[i][0]['order_id_num'] = comma_str(comma_list)
 
     return result
 
@@ -333,7 +516,8 @@ def schedule_history(request):
 def fixed_list(request):
     date = datetime.datetime.today().strftime("%Y%m%d")
     available_list = OrderSchedule.objects.raw(
-        'SELECT * FROM order_orderschedule WHERE SUBSTRING(sch_id, 4, 8) = ' + date)
+        ' SELECT * FROM order_orderschedule WHERE SUBSTRING(sch_id, 4, 8) = ' + date +
+        ' GROUP BY sch_id ')
     result = []
     for p in available_list:
         avail_dict = {}
@@ -363,12 +547,13 @@ def fixed_order(request):
             OrderSchedule.objects.filter(sch_id=ord).update(use_yn='Y')
         else:
             for i in orders:
-                OrderSchedule.objects.update_or_create(
-                    # order_id=OrderList.objects.get(order_id=ord.split('.')[0]),
-                    order_id=OrderList.objects.get(order_id=i.order_id.split('.')[0]),
-                    sch_id=Schedule.objects.get(sch_id=i.sch_id),
-                    use_yn='Y'
-                )
+                order_ids = OrderList.objects.filter(prod_id=i.prod_id)
+                for j in order_ids:
+                    OrderSchedule.objects.update_or_create(
+                        order_id=OrderList.objects.get(order_id=j.order_id),
+                        sch_id=Schedule.objects.get(sch_id=i.sch_id),
+                        use_yn='Y'
+                    )
 
     return JsonResponse({"message": 'success'})
 
@@ -376,23 +561,36 @@ def fixed_order(request):
 def confirmed_order(request):
     result = available_list(request)
     final_result = []
+    confirmed_list = []
+    use_yn_list = []
     for i in range(len(result)):
         try:
-            sch_id = result[i]['schedule'][0]['sch_id']
+            sch_id = result[i]['sch_id']
             confirmed = OrderSchedule.objects.filter(sch_id=sch_id).values()
+            confirmed_list.append(confirmed)
+            for j in confirmed:
+                use_yn_list.append(j['use_yn'])
         except:
             sch_id = result[i][0]['sch_id']
             confirmed = OrderSchedule.objects.filter(sch_id=sch_id).values()
 
-    final_result=list(confirmed)
+    use_yn_list = set(use_yn_list)
+    use_yn_list = list(use_yn_list)
+
+    if len(use_yn_list) > 1:
+        for i in confirmed_list:
+            if i[0]['use_yn'] == 'Y':
+                final_result.append(list(i))
+    else:
+        for i in confirmed_list:
+            final_result.append(list(i))
+
     def json_default(value):
         if isinstance(value, datetime.datetime):
             return value.strftime('%Y-%m-%d')
         raise TypeError('not JSON serializable')
-
     # print(json.dumps(schedule_list, default=json_default))
     return HttpResponse(json.dumps(final_result, default=json_default))
-
 
 # 스케줄 새로 생성시 삭제
 def delete_order(request):
@@ -411,21 +609,8 @@ def delete_order(request):
 
 
 def test_data(request):
-    date = datetime.datetime.today().strftime("%Y%m")
-    for i in request.GET:
-        request = json.loads(i)
-    available_list = []
-    year = date[0:4]
-    month = date[4:6]
-    lastday = calendar.monthrange(int(year), int(month))[1]
-    final_result = Schedule.objects.filter(work_str_date__gte=date + '01').filter(
-        work_end_date__lte=date + str(lastday))
-    for i in final_result:
-        available_list.append(OrderSchedule.objects.filter(sch_id=i.sch_id))
-    def json_default(value):
-        if isinstance(value, datetime.datetime):
-            return value.strftime('%Y-%m-%d')
-        raise TypeError('not JSON serializable')
+    generate_data()
 
     # print(json.dumps(schedule_list, default=json_default))
-    return HttpResponse(json.dumps(list(final_result.values()), default=json_default))
+    # return HttpResponse(json.dumps(list(final_result.values()), default=json_default))
+    return JsonResponse({"message": 'success'})

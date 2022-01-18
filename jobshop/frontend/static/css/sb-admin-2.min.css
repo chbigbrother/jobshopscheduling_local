@@ -84,6 +84,10 @@ hr {
   height: 0;
   overflow: visible;
 }
+.hr-modal {
+    border-top: 1px solid #000;
+}
+
 h1,
 h2,
 h3,
@@ -96,6 +100,12 @@ h6 {
 p {
   margin-top: 0;
   margin-bottom: 1rem;
+}
+.modal-p {
+    font-size:0.8rem;
+    font-weight:bold;
+    color: #000;
+    margin-bottom:-1rem !important;
 }
 abbr[data-original-title],
 abbr[title] {
@@ -1724,7 +1734,7 @@ pre code {
   border: 0;
 }
 .form-control {
-  display: block;
+  /* display: block; */
   width: 100%;
   height: calc(1.5em + 0.75rem + 2px);
   padding: 0.375rem 0.75rem;
@@ -3805,6 +3815,11 @@ input[type='submit'].btn-block {
   background-color: transparent;
   border-color: transparent;
 }
+
+.nav-item.none {
+    display: none;
+}
+
 .nav-tabs .nav-item.show .nav-link,
 .nav-tabs .nav-link.active {
   color: #6e707e;
@@ -9546,6 +9561,10 @@ a:focus {
   font-weight: 800;
   font-size: 0.65rem;
   color: #b7b9cc;
+}
+
+.collapse-item.none {
+    display:none !important;
 }
 .sidebar .nav-item .collapse .collapse-inner .collapse-item,
 .sidebar .nav-item .collapsing .collapse-inner .collapse-item {

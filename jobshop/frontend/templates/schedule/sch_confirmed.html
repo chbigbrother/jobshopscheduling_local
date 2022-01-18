@@ -20,7 +20,7 @@
                         <tr>
                             <th scope="col">번호</th>
                             <th scope="col">스케쥴실행일자</th>
-                            <th scope="col">작업기한</th>
+                            <th scope="col">작업기한요청일</th>
                             <th scope="col">오더일자</th>
                             <th scope="col">오더번호</th>
                         </tr>
@@ -133,7 +133,7 @@ $(function(){
                                 id: result[i].sch_id,
                                 title: result[i].order_id,
                                 start: dateformat(result[i].work_str_date),
-                                end: dateformat(result[i].work_end_date)
+                                end: dateformat(result[i].work_end_date),
                             })
                         }
                         return callback(events);
@@ -147,7 +147,6 @@ $(function(){
             url:'',
             method:'GET',
             success: function(result){
-                console.log(result);
                 $('#activationSettingModal').modal('show');
                 $('.modal-title').text(info.event.title);
             },

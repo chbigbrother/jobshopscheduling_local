@@ -744,7 +744,7 @@
 
         selectAllText: '전체 선택',
         allSelected: '전체 선택 완료',
-        countSelected: '# of % selected',
+        countSelected: '% 중 # 개 선택',
         noMatchesFound: 'No matches found',
 
         styler: function () {
