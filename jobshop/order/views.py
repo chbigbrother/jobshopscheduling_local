@@ -209,44 +209,84 @@ def fixed_order(request):
 
     final_result = []
     if group_name == 'customer':  # 고객
-        result = OrderSchedule.objects.filter(sch_id__work_str_date__gte=date_from, sch_id__work_str_date__lte=date_to).filter(order_id__cust_name=user_name)
-        last_result = [] # 수정한 자리
-        complist = [] # 수정한 자리
+        result = OrderSchedule.objects.filter(sch_id__work_str_date__gte=date_from,
+                                              sch_id__work_str_date__lte=date_to).filter(order_id__cust_name=user_name).filter(use_yn="Y")
+        last_result = []  # 수정한 자리
+        complist = []  # 수정한 자리
         for q in result:
-            if q.use_yn == 'Y':
-                final_dict = {}
-                final_dict['comp_name'] = q.sch_id.comp_id.comp_name  # 회사명
-                final_dict['order_id'] = q.order_id.order_id  # 오더번호
-                final_dict['amount'] = q.order_id.amount  # 오더수량
-                final_dict['cust_name'] = user_name  # 고객명
-                final_dict['sch_date'] = q.order_id.sch_date  # 주문일자
-                final_dict['exp_date'] = q.order_id.exp_date  # 작업기한
-                final_dict['textile_name'] = q.order_id.prod_id.prod_name  # 소재명
-                final_dict['amount'] = q.order_id.amount  # 주문수량
-                final_result.append(final_dict)
+            final_dict = {}
+            final_dict['comp_name'] = q.sch_id.comp_id.comp_name  # 회사명
+            final_dict['order_id'] = q.order_id.order_id  # 오더번호
+            final_dict['amount'] = q.order_id.amount  # 오더수량
+            final_dict['cust_name'] = user_name  # 고객명
+            final_dict['sch_date'] = q.order_id.sch_date  # 주문일자
+            final_dict['exp_date'] = q.order_id.exp_date  # 작업기한
+            final_dict['textile_name'] = q.order_id.prod_id.prod_name  # 소재명
+            final_dict['amount'] = q.order_id.amount  # 주문수량
+            final_result.append(final_dict)
 
-            custlist = []
+        custlist = []
 
-            for i in range(len(final_result)):
-                custlist.append(final_result[i]['cust_name'])
-            custset = set(custlist)
-            custlist = list(custset)  # 중복제거
+        for i in range(len(final_result)):
+            custlist.append(final_result[i]['cust_name'])
+        custset = set(custlist)
+        custlist = list(custset)  # 중복제거
 
-            for i in range(len(final_result)):
-                complist.append(final_result[i]['comp_name'])
-            compset = set(complist)
-            complist = list(compset)  # 중복제거
-            #
+        # complist = [] 원래 자리
+        for i in range(len(final_result)):
+            complist.append(final_result[i]['comp_name'])
+        compset = set(complist)
+        complist = list(compset)  # 중복제거
+        #
 
-            count = {}
-            for i in range(len(final_result)):
-                try:
-                    count[final_result[i]['cust_name']] += 1
-                except:
-                    count[final_result[i]['cust_name']] = 1
+        count = {}
+        for i in range(len(final_result)):
+            try:
+                count[final_result[i]['cust_name']] += 1
+            except:
+                count[final_result[i]['cust_name']] = 1
+        order_id = ''
+        # last_result = [] 원래 자리
+        one_cust = []
+        for i in count:
+            if count[i] > 1:
+                for q in range(len(final_result)):
+                    if q == 0:
+                        if order_id == final_result[q]['order_id']:
+                            if i == final_result[q]['cust_name']:
+                                common_dict = {}
+                                common_dict['cust_name'] = final_result[q]['cust_name']  # 고객명
+                                common_dict['comp_name'] = final_result[q]['comp_name']  # 회사명
+                                common_dict['order_id'] = final_result[q]['order_id']  # 오더번호
+                                common_dict['amount'] = final_result[q]['amount']  # 오더수량
+                                common_dict['sch_date'] = final_result[q]['sch_date']  # 주문일자
+                                common_dict['exp_date'] = final_result[q]['exp_date']  # 작업기한
+                                common_dict['textile_name'] = final_result[q]['textile_name']  # 소재명
+                                one_cust.append(common_dict)
+                            else:
+                                last_result.append(final_result[q])
+                    else:
+                        if i == final_result[q]['cust_name']:
+                            common_dict = {}
+                            common_dict['cust_name'] = final_result[q]['cust_name']  # 고객명
+                            common_dict['comp_name'] = final_result[q]['comp_name']  # 회사명
+                            common_dict['order_id'] = final_result[q]['order_id']  # 오더번호
+                            common_dict['amount'] = final_result[q]['amount']  # 오더수량
+                            common_dict['sch_date'] = final_result[q]['sch_date']  # 주문일자
+                            common_dict['exp_date'] = final_result[q]['exp_date']  # 작업기한
+                            common_dict['textile_name'] = final_result[q]['textile_name']  # 소재명
+                            one_cust.append(common_dict)
+                        else:
+                            last_result.append(final_result[q])
 
-                last_result = final_result
+                last_result.append(one_cust)
+                last_result.append(complist)
 
+                # else:
+                # print('null')
+            # else:
+            last_result = final_result
+        # last_result.append(one_cust)
         last_result.append(complist)
     # if len(request.user.groups.values('id')) == 0: # 회사
     if group_name != 'admin' and group_name != 'customer':

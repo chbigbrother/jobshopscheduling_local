@@ -12,10 +12,10 @@ from matplotlib import colors as mcolors
 from matplotlib import pyplot as plt
 import datetime
 
-colors = []
+colors = ["#1984c5", "#22a7f0", "#e1a692", "#de6e56", "#e14b31", "#c23728", "#63bff0", "#a7d5ed", "#e2e2e2"]
 
-for name, hex in mcolors.cnames.items():
-    colors.append(name)
+# for name, hex in mcolors.cnames.items():
+#     colors.append(name)
 
 
 def parse_data(file):
@@ -92,13 +92,13 @@ def draw_chart(data,a):
             for i in range(len(list(data.keys()))):
                 for j in range(len(num_list)):
                     if num_list[j] == yloc:
-                        print('yloc : ', yloc, 'j: ', num_list[j], ' j 와 관련된 Machine : ', list(data.keys())[j])
                         y_axis = list(data.keys())[j].replace('Machine-', '')
+                        machine_num.append(list(data.keys())[i])
 
             y1_list.append(y_axis)
 
-            for i in range(len(list(data.keys()))):
-                machine_num.append(list(data.keys())[i])
+            # for i in range(len(list(data.keys()))):
+            #     machine_num.append(list(data.keys())[i])
             order_id_num.append("{}.{}".format((int(op[2][0])+1),op[2].split("-")[1]))
             color_list.append(colors[int(op[2][0])])
 

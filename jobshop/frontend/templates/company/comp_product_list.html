@@ -27,7 +27,7 @@
                         <th>일일평균생산량</th>
                         <th>생성일자</th>
                         <th>수정일자</th>
-                        <th style="text-align:center;">관리</th>
+                        <th class="{% if user.groups.all.0.name == 'customer' %} none {% endif %}" style="text-align:center;">관리</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -40,7 +40,7 @@
                         <td>{{comp.daily_prod_rate}}</td>
                         <td>{{comp.created_at}}</td>
                         <td>{{comp.modified_at}}</td>
-                        <td style="text-align:center;">
+                        <td class="{% if user.groups.all.0.name == 'customer' %} none {% endif %}" style="text-align:center;">
                             <a href="" id="edit_{{ comp.id }}"><i class="far fa-edit {{ comp.id }}"></i></a>
                             <a href="" id="delete_{{ comp.id }}" style="margin-left:10px;"><i class="fas fa-trash-alt"></i></a>
                         </td>

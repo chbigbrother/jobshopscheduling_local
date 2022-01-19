@@ -4,7 +4,7 @@
     .card-body{position:relative;}
     .edit_{position:absolute; top:45%; right:5%;}
     .delete_{position:absolute; top:45%; right:3%;}
-
+    .multiple-items {position:absolute; top:16px; left:39%;}
 </style>
 <!-- Page Heading -->
 <div class="row">
@@ -57,6 +57,7 @@
         var colors = ['secondary', 'success', 'info', 'warning', 'danger', 'dark','secondary', 'success', 'info', 'warning', 'danger', 'dark','secondary', 'success', 'info', 'warning', 'danger', 'dark'];
         $(function(){
             const today = moment();
+            var grp_name = $("#group_name").val();
             // 검색 날짜 init
             flatpickr("#dateTo", {
                    locale: Flatpickr.l10ns.ko,
@@ -94,6 +95,7 @@
                         var div = document.createElement('div');
                         inner.className = 'col-lg-12';
                         inner.height = "100%";
+                        div.className = 'multiple-items';
                         var name = '';
                         if(data['message'] == 'null'){
                             $('.data-row').html('<div class="col-lg-6">'+
@@ -107,7 +109,6 @@
                                 // 회사별 색상 정하기
                                 for(var j=0; j<data[data.length-1].length; j++){
                                     for(var i=0; i<data.length; i++){
-                                        // var type = data[i].textile_type=='weave'?'재직':'편직';
                                         if(data[i].length>1 && typeof data[i].length != 'undefined' && typeof data[i][j].sch_date != 'undefined'){
                                                 inner.innerHTML =
                                                                 '<div class="card mb-2 py-1 border-bottom-primary" >' +
@@ -127,8 +128,8 @@
                                                                                 '</div>' +
                                                                             '</div>' +
                                                                         '</div>' +
-                                                                        '<a href="#" class="edit_"><i class="far fa-edit "></i></a>'+
-                                                                        '<a href="#" class="delete_" style="margin-left:10px; z-index:1000;"><i class="fas fa-trash-alt"></i></a>';
+                                                                        '<a href="#" class="edit_ {% if user.groups.all.0.name == 'customer' %} none {% endif %} "><i class="far fa-edit "></i></a>'+
+                                                                        '<a href="#" class="delete_ {% if user.groups.all.0.name == 'customer' %} none {% endif %} " style="margin-left:10px; z-index:1000;"><i class="fas fa-trash-alt"></i></a>';
                                                 for(var k=0; k<data[i].length; k++){
                                                     name = data[i][0].cust_name;
                                                     if(data[i][k].comp_name == data[data.length-1][j]){
@@ -156,16 +157,18 @@
 
                                                                         '</div>' +
                                                                     '</div>' +
-                                                                    '<a href="#" class="edit_"><i class="far fa-edit "></i></a>'+
-                                                                    '<a href="#" class="delete_" style="margin-left:10px; z-index:1000;"><i class="fas fa-trash-alt"></i></a>' +
+                                                                    '<a href="#" class="edit_ {% if user.groups.all.0.name == 'customer' %} none {% endif %} "><i class="far fa-edit "></i></a>'+
+                                                                    '<a href="#" class="delete_ {% if user.groups.all.0.name == 'customer' %} none {% endif %} " style="margin-left:10px; z-index:1000;"><i class="fas fa-trash-alt"></i></a>' +
                                                                  '</div>';
                                                     }
                                                 }
                                         } else {
-                                            if(data.length >2 && data[i].comp_name == data[data.length-1][j]){
+                                            // ** ***** 한 업체에 오더 여러개 설정 되었을 때, ************************** **
+                                            if(data.length >2 && data[i].comp_name == data[data.length-1][j] && grp_name != 'customer'){
+                                                name = data[i].cust_name;
                                                 innerHTML += '<div class="col-lg-12" style="height:100%;">' +
                                                             '<div class="card mb-2 py-1 border-bottom-primary" >' +
-                                                                '<div class="card-body" style="height: 12rem;">' +
+                                                                '<div class="card-body ' + data[i].cust_name + '" style="height: 12rem;">' +
                                                                     '<div class="card border-left-primary shadow h-100 py-2">' +
                                                                         '<div class="card-body">' +
                                                                             '<div class="row no-gutters align-items-center">' +
@@ -204,15 +207,16 @@
 
                                                                 '</div>' +
                                                             '</div>' +
-                                                            '<a href="#" class="edit_"><i class="far fa-edit "></i></a>'+
-                                                            '<a href="#" class="delete_" style="margin-left:10px; z-index:1000;"><i class="fas fa-trash-alt"></i></a>'+
+                                                            '<a href="#" class="edit_ {% if user.groups.all.0.name == 'customer' %} none {% endif %} "><i class="far fa-edit "></i></a>'+
+                                                            '<a href="#" class="delete_ {% if user.groups.all.0.name == 'customer' %} none {% endif %} " style="margin-left:10px; z-index:1000;"><i class="fas fa-trash-alt"></i></a>'+
                                                          '</div>';
                                             }
-                                            if(data.length == 2 && data[data.length-1][j]){
-                                                if(typeof data[i].sch_date != 'undefined'){
-                                                    innerHTML += '<div class="col-lg-12" style="height:100%;">' +
+                                            // ** ***** 한 고객의 하나의 오더가 여러 회사에서 가능할 때, ************************** **
+                                            if (data.length >2 && data[i].comp_name == data[data.length-1][j] && grp_name == 'customer') {
+                                                name = data[i].cust_name;
+                                                innerHTML = '<div class="col-lg-12" style="height:100%;">' +
                                                                 '<div class="card mb-2 py-1 border-bottom-primary" >' +
-                                                                    '<div class="card-body" style="height: 12rem;">' +
+                                                                    '<div class="card-body ' + data[i].cust_name + '" style="height: 12rem;">' +
                                                                         '<div class="card border-left-primary shadow h-100 py-2">' +
                                                                             '<div class="card-body">' +
                                                                                 '<div class="row no-gutters align-items-center">' +
@@ -228,12 +232,64 @@
                                                                                 '</div>' +
                                                                             '</div>' +
                                                                         '</div>' +
+                                                                        '<div class="card-body" style="display:inline-block; margin-top:-1.4rem;" >'+
+                                                                            '<div class="card mb-4 py-3 border-left border-left-secondary">' +
+                                                                                '<div class="card-body">' +
+                                                                                    // '<div class="h5 mb-0 font-weight-bold text-gray-800">' + type + '/' + data[i].textile_name + '</div>' +
+                                                                                    '<div class="h6 mb-0 font-weight-bold text-gray-800">오더번호 : ' + data[i].order_id + '</div>' +
+                                                                                    '<div class="h6 mb-0 font-weight-bold text-gray-800">수량 :' + data[i].amount + 'yd</div>' +
+                                                                                '</div>' +
+                                                                            '</div>';
+
+                                                div.innerHTML +=
+                                                                    '<div class="card mb-4 py-3 border-left border-left-' + colors[j] + '">' +
+                                                                        '<div class="card-body">' +
+                                                                            '<div class="col-lg-12 mb-4">' +
+                                                                                '<div class="card bg-' + colors[j] + ' text-white shadow">' +
+                                                                                    '<div class="card-body">' +
+                                                                                        data[i].comp_name +
+                                                                                        '<div class="text-white-50 small">작업 가능</div>' +
+                                                                                    '</div>' +
+                                                                                '</div>' +
+                                                                            '</div>' +
+                                                                        '</div>' +
+                                                                    '</div>' +
+                                                                '</div>'+
+
+                                                            '</div>' +
+                                                        '</div>' +
+                                                        '<a href="#" class="edit_ {% if user.groups.all.0.name == 'customer' %} none {% endif %} "><i class="far fa-edit "></i></a>'+
+                                                        '<a href="#" class="delete_ {% if user.groups.all.0.name == 'customer' %} none {% endif %} " style="margin-left:10px; z-index:1000;"><i class="fas fa-trash-alt"></i></a>' +
+                                                     '</div>';
+                                            }
+                                            // ** ***** 한 업체에 오더 한개 설정 되었을 때, ************************** **
+                                            if(data.length == 2 && data[data.length-1][j]){
+                                                if(typeof data[i][0].sch_date != 'undefined'){
+                                                console.log('하나다스벌!');
+                                                    innerHTML += '<div class="col-lg-12" style="height:100%;">' +
+                                                                '<div class="card mb-2 py-1 border-bottom-primary" >' +
+                                                                    '<div class="card-body" style="height: 12rem;">' +
+                                                                        '<div class="card border-left-primary shadow h-100 py-2">' +
+                                                                            '<div class="card-body">' +
+                                                                                '<div class="row no-gutters align-items-center">' +
+                                                                                    '<div class="col mr-2">' +
+                                                                                        '<div class="text-xs font-weight-bold text-primary text-uppercase mb-1">' +
+                                                                                            dateformat(data[i][0].sch_date) + '</div>' +
+                                                                                        '<div class="h5 mb-0 font-weight-bold text-gray-800">주문자 :' + data[i][0].cust_name + '</div>' +
+                                                                                        '<div class="h6 mb-0 font-weight-bold text-gray-800">기한 :' + dateformat(data[i][0].exp_date) + '</div>' +
+                                                                                    '</div>' +
+                                                                                    '<div class="col-auto">' +
+                                                                                        '<i class="fas fa-calendar fa-2x text-gray-300"></i>' +
+                                                                                    '</div>' +
+                                                                                '</div>' +
+                                                                            '</div>' +
+                                                                        '</div>' +
 
                                                                         '<div class="card mb-4 py-3 border-left border-left-secondary">' +
                                                                             '<div class="card-body">' +
-                                                                                // '<div class="h5 mb-0 font-weight-bold text-gray-800">' + type + '/' + data[i].textile_name + '</div>' +
-                                                                                '<div class="h6 mb-0 font-weight-bold text-gray-800">오더번호 : ' + data[i].order_id + '</div>' +
-                                                                                '<div class="h6 mb-0 font-weight-bold text-gray-800">수량 :' + data[i].amount + 'yd</div>' +
+                                                                                // '<div class="h5 mb-0 font-weight-bold text-gray-800">' + type + '/' + data[i][0].textile_name + '</div>' +
+                                                                                '<div class="h6 mb-0 font-weight-bold text-gray-800">오더번호 : ' + data[i][0].order_id + '</div>' +
+                                                                                '<div class="h6 mb-0 font-weight-bold text-gray-800">수량 :' + data[i][0].amount + 'yd</div>' +
                                                                             '</div>' +
                                                                         '</div>' +
                                                                         '<div class="card mb-4 py-3 border-left border-left-' + colors[j] + '">' +
@@ -241,7 +297,7 @@
                                                                                 '<div class="col-lg-12 mb-4">' +
                                                                                     '<div class="card bg-' + colors[j] + ' text-white shadow">' +
                                                                                         '<div class="card-body">' +
-                                                                                            data[i].comp_name +
+                                                                                            data[i][0].comp_name +
                                                                                             '<div class="text-white-50 small">작업 가능</div>' +
                                                                                         '</div>' +
                                                                                     '</div>' +
@@ -251,8 +307,8 @@
 
                                                                     '</div>' +
                                                                 '</div>' +
-                                                                '<a href="#" class="edit_"><i class="far fa-edit "></i></a>'+
-                                                                '<a href="#" class="delete_" style="margin-left:10px; z-index:1000;"><i class="fas fa-trash-alt"></i></a>'+
+                                                                '<a href="#" class="edit_ {% if user.groups.all.0.name == 'customer' %} none {% endif %} "><i class="far fa-edit "></i></a>'+
+                                                                '<a href="#" class="delete_ {% if user.groups.all.0.name == 'customer' %} none {% endif %} " style="margin-left:10px; z-index:1000;"><i class="fas fa-trash-alt"></i></a>'+
                                                              '</div>';
                                                 }
                                             }

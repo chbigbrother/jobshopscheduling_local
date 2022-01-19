@@ -3815,10 +3815,16 @@ input[type='submit'].btn-block {
   background-color: transparent;
   border-color: transparent;
 }
-
+.none {
+    display: none;
+}
 .nav-item.none {
     display: none;
 }
+.nav-item.show {
+    display: block;
+}
+
 
 .nav-tabs .nav-item.show .nav-link,
 .nav-tabs .nav-link.active {

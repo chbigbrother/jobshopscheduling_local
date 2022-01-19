@@ -476,10 +476,12 @@
                 enddate = new Date(result[0].work_end_date);
                 for (var i = 0; i < result.length; i++) {
                     var xmin = new Date(result[0].work_str_date);
+                    var x_axis_1 = new Date(xmin.setDate(xmin.getDate() + result[i].x_axis_1));
+                    var x_axis_2 = result[i].x_axis_2 - result[i].x_axis_1;
                     if (xmax < result[i].x_axis_2) {xmax = result[i].x_axis_2;}
                     if (ymax < result[i].y_axis_1) {ymax = result[i].y_axis_1;}
                     dataset.push({
-                        label: result[i].order_id_num,
+                        label: result[i].prod_name,
                         backgroundColor: "rgba(78, 115, 223, 0.05)",
                         borderColor: result[i].sch_color,
                         fill: false,
@@ -487,10 +489,10 @@
                         borderWidth: 15,
                         pointRadius: 0,
                         data: [{
-                            x: new Date(xmin.setDate(xmin.getDate() + result[i].x_axis_1)), // xmin + (result[i].x_axis_1),
+                            x: x_axis_1,
                             y: result[i].y_axis_1,
                         }, {
-                            x: new Date(xmin.setDate(xmin.getDate() + result[i].x_axis_2)), // xmin + (result[i].x_axis_2),
+                            x: new Date(xmin.setDate(xmin.getDate() + x_axis_2)),
                             y: result[i].y_axis_1,
                         }]
                     })
@@ -526,14 +528,19 @@
                                 var ctx = this.chart.ctx;
                                 var cht = this.chart;
                                 ctx.font = Chart.helpers.fontString(Chart.defaults.global.defaultFontFamily, 'light', Chart.defaults.global.defaultFontFamily);
-                                ctx.fillStyle = "#4e73df";
+                                ctx.fillStyle = "#466964";
                                 ctx.textAlign = 'center';
                                 ctx.textBaseline = 'bottom';
+
                                 this.data.datasets.forEach(function(dataset, i) {
                                     var meta = cht.controller.getDatasetMeta(i);
+                                    var data = dataset.label;
+                                    var arr = new Array();
+                                    arr.push(data);
                                     meta.data.forEach(function(bar, index){
-                                        var data = dataset.label;
-                                        ctx.fillText(data, bar._model.x, bar._model.y);
+                                        var label = arr[index];
+                                        if (typeof label == 'undefined') {label = ''}
+                                        ctx.fillText(label, bar._model.x, bar._model.y-5);
                                     })
 
                                 });
@@ -607,6 +614,7 @@
                     contentType: 'application/json',
                     processData: false,
                     success: function(data) {
+                        console.log(data);
                         var innerHTML = '';
                         if (data.length > 0) {
                             for (var i = 0; i < data.length; i++) {
@@ -639,9 +647,9 @@
                                         '</tr>';
                                 } else {
                                     for (var i = 0; i < result.length; i++) {
-                                        var prod_name = result[i].prod_id.toString();
-                                        var orderid = result[i].order_id_num.toString();
-                                        var date = result[i].sch_id.toString();
+                                        var prod_name = result[i][0].prod_id.toString();
+                                        var orderid = result[i][0].order_id_num.toString();
+                                        var date = result[i][0].sch_id.toString();
                                         // var date = result[i].schedule[0].sch_id.toString();
                                         var year = date.substring(3, 7);
                                         var month = date.substring(7, 9);
@@ -649,13 +657,13 @@
                                         date = year + '-' + month + '-' + day;
                                         var count = i + 1;
                                         innerHTML += '<tr>' +
-                                            '<input type="hidden" class="order_id" value="' + result[i].order_id + '" />' +
-                                            '<input type="hidden" class="sch_id" value="' + result[i].sch_id + '" />' +
+                                            '<input type="hidden" class="order_id" value="' + result[i][0].order_id + '" />' +
+                                            '<input type="hidden" class="sch_id" value="' + result[i][0].sch_id + '" />' +
                                             '<td scope="row">' + count + '</td>' +
                                             '<td>' + date + '</td>' +
                                             '<td>' + orderid + '</td>' +
                                             '<td>' + prod_name + '</td>' +
-                                            '<td><div style="width:1rem; height:1rem; background-color:' + result[i].sch_color + '"></div></td>' +
+                                            '<td><div style="width:1rem; height:1rem; background-color:' + result[i][0].sch_color + '"></div></td>' +
                                             '<td><input class="checkbox" id="accept-' + count + '" type="checkbox" checked="checked" value="Y" name="check"/></td>' +
                                             '</tr>';
                                     }
@@ -664,23 +672,22 @@
                         } else {
                             for (var i = 0; i < result.length; i++) {
                                 /* 추후 삭제 */
-                                var prod_name = result[i][0].prod_id.toString();
-                                var orderid = result[i][0].order_id_num.toString();
+                                var prod_name = result[i].prod_id.toString();
+                                var orderid = result[i].order_id_num.toString();
                                 /* 추후 삭제 */
-                                var date = result[i][0].sch_id.toString();
+                                var date = result[i].sch_id.toString();
                                 var year = date.substring(3, 7);
                                 var month = date.substring(7, 9);
                                 var day = date.substring(9, 11);
                                 date = year + '-' + month + '-' + day;
                                 var count = i + 1;
                                 innerHTML += '<tr>' +
-                                    '<input type="hidden" class="order_id" value="' + result[i][0].order_id + '" />' +
-                                    '<input type="hidden" class="sch_id" value="' + result[i][0].sch_id + '" />' +
+                                    '<input type="hidden" class="order_id" value="' + result[i].order_id + '" />' +
+                                    '<input type="hidden" class="sch_id" value="' + result[i].sch_id + '" />' +
                                     '<td scope="row">' + count + '</td>' +
                                     '<td>' + date + '</td>' +
                                     '<td>' + orderid + '</td>' +
                                     '<td>' + prod_name + '</td>' +
-                                    '<td><div style="width:1rem; height:1rem; background-color:' + result[i][0].sch_color + '"></div></td>' +
                                     '<td><input class="checkbox" id="accept-' + count + '" type="checkbox" checked="checked" value="Y" name="check"/></td>' +
                                     '</tr>';
                             }

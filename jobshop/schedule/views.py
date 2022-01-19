@@ -226,6 +226,8 @@ def draw_graph(request):
         schedule_list[i]['work_str_date'] = date_str(schedule_list[i]['work_str_date'])
         schedule_list[i]['work_end_date'] = date_str(schedule_list[i]['work_end_date'])
         schedule_list[i]['y_axis_1'] = fac_name.facility_name
+        product = Product.objects.get(prod_id=schedule_list[i]['prod_id'])
+        schedule_list[i]['prod_name'] = product.prod_name
 
 
     def json_default(value):
@@ -396,6 +398,7 @@ def available_list(request):
                     prod_name = product_id.prod_name
                     j['prod_id'] = prod_name
                     j['order_id_num'] = comma_str(comma_list)
+                    j['use_yn'] = i['use_yn']
                     result.append(j)
             else:
                 sch_list = Schedule.objects.filter(comp_id=request.user.groups.values('id')[0]['id'],
@@ -413,8 +416,8 @@ def available_list(request):
                     ' AND x_axis_2 < ' + str(date_diff.days) + ' AND count=' + count +
                     ' AND comp_id=' + str(request.user.groups.values('id')[0]['id']) +
                     ' AND STR_TO_DATE(created_at, "%%Y-%%m-%%d")= "' + now.strftime('%Y-%m-%d') + '"' +
-                    ' AND prod_id NOT IN (SELECT prod_id FROM company_schedule WHERE x_axis_2 >' + str(date_diff.days) +
-                    ' OR x_axis_1 >' + str(date_diff.days) +
+                    ' AND prod_id NOT IN (SELECT prod_id FROM company_schedule WHERE (x_axis_2 >' + str(date_diff.days) +
+                    ' OR x_axis_1 >' + str(date_diff.days) + ')' +
                     ' AND count= ' + count + ' AND comp_id=' + str(request.user.groups.values('id')[0]['id']) +
                     ') GROUP BY sch_color')
 
@@ -422,12 +425,15 @@ def available_list(request):
                 final_list = []
                 dict_list = []
                 result = []
+                test_list = []
                 for p in available_list:
+                    test_list.append(p)
                     color_list.append(p.sch_color)
 
-                for i in color_list:
-                    # color = Schedule.objects.raw('SELECT * FROM company_schedule WHERE sch_color = "' +  i + '" GROUP BY sch_color HAVING MAX(sch_id)')
-                    color = Schedule.objects.filter(sch_color=i, comp_id=request.user.groups.values('id')[0]['id'])
+                for tst in test_list:
+                    test = Schedule.objects.get(sch_id=tst.sch_id)
+                    color = Schedule.objects.filter(sch_id=tst.sch_id, comp_id=request.user.groups.values('id')[0]['id'])
+                    color.group_by = ['sch_color']
                     final_list.append(color.aggregate(Max('sch_id')))
 
                 for i in range(len(final_list)):
@@ -460,15 +466,18 @@ def available_list(request):
             count = str(count['count__max'])
             sch_list = Schedule.objects.filter(comp_id=request.user.groups.values('id')[0]['id'],
                                         created_at__year=now.year, created_at__month=now.month, created_at__day=now.day, count=count)
+
             date_diff = calc_date_str(sch_list[0].work_str_date, sch_list[0].work_end_date)
+
             available_list = Schedule.objects.raw(
-                'SELECT sch_color, sch_id FROM company_schedule WHERE x_axis_2 < ' + str(date_diff.days) +
-                ' AND x_axis_2 < ' + str(date_diff.days) + ' AND count=' + count +
+                ' SELECT sch_color, sch_id FROM company_schedule WHERE ' +
+                ' x_axis_2 < ' + str(date_diff.days) + ' AND count=' + count +
                 ' AND comp_id=' + str(request.user.groups.values('id')[0]['id']) +
                 ' AND STR_TO_DATE(created_at, "%%Y-%%m-%%d")= "' + now.strftime('%Y-%m-%d') + '"'+
-                ' AND prod_id NOT IN (SELECT prod_id FROM company_schedule WHERE x_axis_2 >' + str(date_diff.days) +
-                ' OR x_axis_1 >'  + str(date_diff.days) +
+                ' AND prod_id NOT IN (SELECT prod_id FROM company_schedule WHERE ' +
+                ' STR_TO_DATE(created_at, "%%Y-%%m-%%d")= "' + now.strftime('%Y-%m-%d') + '"' +
                 ' AND count= ' + count + ' AND comp_id=' + str(request.user.groups.values('id')[0]['id']) +
+                ' AND (x_axis_2 >' + str(date_diff.days) + ' OR x_axis_1 >' + str(date_diff.days) + ')'
                 ') GROUP BY sch_color')
 
             for p in available_list:
@@ -515,9 +524,22 @@ def schedule_history(request):
 # 처리 확정 히스토리 리스트 추출
 def fixed_list(request):
     date = datetime.datetime.today().strftime("%Y%m%d")
-    available_list = OrderSchedule.objects.raw(
-        ' SELECT * FROM order_orderschedule WHERE SUBSTRING(sch_id, 4, 8) = ' + date +
-        ' GROUP BY sch_id ')
+
+    use_yn_list = OrderSchedule.objects.raw(
+        ' SELECT * FROM order_orderschedule ' +
+        ' WHERE SUBSTRING(sch_id, 4, 8) = ' + date +
+        ' GROUP BY use_yn'
+    )
+    if len(use_yn_list)%2 == 1:
+        available_list = OrderSchedule.objects.raw(
+            ' SELECT * FROM order_orderschedule WHERE SUBSTRING(sch_id, 4, 8) = ' + date +
+            ' GROUP BY sch_id ')
+    else:
+        available_list = OrderSchedule.objects.raw(
+            ' SELECT * FROM order_orderschedule WHERE SUBSTRING(sch_id, 4, 8) = ' + date +
+            ' AND use_yn = "Y" ' +
+            ' GROUP BY sch_id ')
+        
     result = []
     for p in available_list:
         avail_dict = {}
@@ -563,16 +585,23 @@ def confirmed_order(request):
     final_result = []
     confirmed_list = []
     use_yn_list = []
+
     for i in range(len(result)):
         try:
             sch_id = result[i]['sch_id']
-            confirmed = OrderSchedule.objects.filter(sch_id=sch_id).values()
+            confirmed = OrderSchedule.objects.filter(sch_id=sch_id).filter(use_yn=result[i]['use_yn']).values()
             confirmed_list.append(confirmed)
             for j in confirmed:
                 use_yn_list.append(j['use_yn'])
         except:
             sch_id = result[i][0]['sch_id']
             confirmed = OrderSchedule.objects.filter(sch_id=sch_id).values()
+            if len(confirmed) == 0:
+                confirmed_list.append(result[i])
+            else:
+                confirmed_list.append(confirmed)
+            for j in confirmed:
+                use_yn_list.append(j['use_yn'])
 
     use_yn_list = set(use_yn_list)
     use_yn_list = list(use_yn_list)
@@ -583,12 +612,14 @@ def confirmed_order(request):
                 final_result.append(list(i))
     else:
         for i in confirmed_list:
+
             final_result.append(list(i))
 
     def json_default(value):
         if isinstance(value, datetime.datetime):
             return value.strftime('%Y-%m-%d')
         raise TypeError('not JSON serializable')
+
     # print(json.dumps(schedule_list, default=json_default))
     return HttpResponse(json.dumps(final_result, default=json_default))
 

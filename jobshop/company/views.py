@@ -3,6 +3,7 @@ from django.urls import reverse_lazy
 from django.http import HttpResponse
 from django.views.generic import ListView, CreateView, DetailView, UpdateView, DeleteView, TemplateView
 from django.http import JsonResponse
+from django.contrib import auth
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils.encoding import smart_str
 from openpyxl import load_workbook
@@ -143,7 +144,12 @@ def comp_product_regist(request):
 # 제품정보검색 company product view HTML
 def comp_product_view(request):
     template_name = 'company/comp_product_list.html'
-    comp_list = Product.objects.filter(comp_id=request.user.groups.values('id')[0]['id'])
+    user = auth.get_user(request)
+    group = request.user.groups.values_list('name', flat=True).first()
+    if group == 'customer':
+        comp_list = Product.objects.all()
+    else:
+        comp_list = Product.objects.filter(comp_id=request.user.groups.values('id')[0]['id'])
     date = datetime.datetime.today() - timedelta(days=3)
     date = {
         "comp_list": comp_list,
