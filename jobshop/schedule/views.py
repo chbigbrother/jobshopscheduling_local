@@ -108,10 +108,13 @@ def draw_history_chart(request):
             if sch.count == int(cnt)+1:
                 result_dict = {}
                 result_dict['facility_id'] = sch.facility_id.facility_name
+                product = Product.objects.get(prod_id=sch.prod_id)
+                result_dict['prod_name'] = product.prod_name
                 result_dict['order_id_num'] = sch.order_id_num
                 result_dict['count'] = sch.count
                 result_dict['sch_color'] = sch.sch_color
                 result_dict['x_axis_1'] = sch.x_axis_1
+                result_dict['x_axis_2'] = sch.x_axis_2
                 result_dict['y_axis_1'] = sch.y_axis_1
                 result_dict['work_str_date'] = date_str(sch.work_str_date)
                 result_dict['work_end_date'] = date_str(sch.work_end_date)

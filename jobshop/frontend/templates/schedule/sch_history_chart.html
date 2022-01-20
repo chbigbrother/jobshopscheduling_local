@@ -148,11 +148,13 @@
                             var title = j+1;
                             if (title == result[i].chart_draw[c].count){
                                 var xmin = new Date(result[i].chart_draw[c].work_str_date);
+                                var x_axis_1 = new Date(xmin.setDate(xmin.getDate() + result[i].chart_draw[c].x_axis_1));
+                                var x_axis_2 = result[i].chart_draw[c].x_axis_2 - result[i].chart_draw[c].x_axis_1;
                                 enddate = new Date(result[i].chart_draw[c].work_end_date);
                                 if (xmax < result[i].chart_draw[c].x_axis_2) {xmax = result[i].chart_draw[c].x_axis_2;}
                                 if (ymax < result[i].chart_draw[c].y_axis_1) {ymax = result[i].chart_draw[c].y_axis_1;}
                                 dataset.push({
-                                    label: result[i].chart_draw[c].order_id_num,
+                                    label: result[i].chart_draw[c].prod_name,
                                     backgroundColor: "rgba(78, 115, 223, 0.05)",
                                     borderColor: result[i].chart_draw[c].sch_color,
                                     fill: false,
@@ -160,10 +162,10 @@
                                     borderWidth: 15,
                                     pointRadius: 0,
                                     data: [{
-                                        x: new Date(xmin.setDate(xmin.getDate() + result[i].chart_draw[c].x_axis_1)), // xmin + (result[i].x_axis_1),
+                                        x: x_axis_1,
                                         y: result[i].chart_draw[c].y_axis_1,
                                     }, {
-                                        x: new Date(xmin.setDate(xmin.getDate() + result[i].chart_draw[c].x_axis_2)), // xmin + (result[i].x_axis_2),
+                                        x: new Date(xmin.setDate(xmin.getDate() + x_axis_2)),
                                         y: result[i].chart_draw[c].y_axis_1,
                                     }]
                                 })
@@ -228,13 +230,12 @@
                                             unitStepSize: 1,
                                             displayFormats: {
                                                 'day': 'MM / DD'
-                                            }
-                                            // min: x_min,
-                                            // max: xmin + (xmax/10),
+                                            },
+                                            // min: xmin,
                                             // suggestedMin: 1,
                                             // maxRotation: 0,
                                             // stepSize: 1
-                                        }
+                                        },
                                     }],
                                     yAxes: [{
                                         scaleLabel: {

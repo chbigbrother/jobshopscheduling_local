@@ -79,13 +79,13 @@ def comp_production_search(request):
         date_to = request.GET['dateTo'].replace('-', '')
 
         order_list = OrderSchedule.objects.filter(sch_id__work_str_date__gte=date_from).filter(
-            sch_id__work_str_date__lte=date_to)
+            sch_id__work_str_date__lte=date_to).filter(sch_id__comp_id=request.user.groups.values('id')[0]['id'])
     else:
         sch_date_from = date
         sch_date_to = datetime.datetime.today()
         order_list = OrderSchedule.objects.filter(sch_id__work_str_date__gte=date.strftime("%Y%m%d"),
                                                   sch_id__work_str_date__lte=datetime.datetime.today().strftime(
-                                                      "%Y%m%d"))
+                                                      "%Y%m%d")).filter(sch_id__comp_id=request.user.groups.values('id')[0]['id'])
 
     result_list = []
     for i in range(len(order_list.values())):
@@ -425,17 +425,24 @@ def comp_avail_facility(request):
 
     fac_list = Facility.objects.all()
     result_list = []
+    common_list = []
     duplicate = []
     if len(order_list) > 0:
         for i in fac_list:
             for j in order_list:
                 if i.facility_id == j.sch_id.facility_id.facility_id:
+                    common_list.append(i.facility_id)
                     continue;
                 else:
                     result_list.append(i.facility_id)
+
+        common_list = set(common_list)
+        common_list = list(common_list)
+
         result_list = set(result_list)
         result_list = list(result_list)
         result_list.sort(reverse=False)
+
 
         result = []
         final_list = []
