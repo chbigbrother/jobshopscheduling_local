@@ -419,30 +419,51 @@ def comp_avail_facility(request):
 
     if request['strDate'] != None:
         strDate = request['strDate'].replace('-', '')
-        order_list = OrderSchedule.objects.filter(sch_id__work_end_date__gt=strDate, sch_id__comp_id=user)
+        order_list = OrderSchedule.objects.filter(sch_id__work_end_date__gt=strDate, sch_id__comp_id=user).filter(use_yn='Y')
     else:
-        order_list = OrderSchedule.objects.filter(sch_id__work_end_date__gt=datetime.datetime.today().strftime("%Y%m%d"))
+        order_list = OrderSchedule.objects.filter(sch_id__work_end_date__gt=datetime.datetime.today().strftime("%Y%m%d")).filter(use_yn='Y')
+
+    using_facility_list = []
+
+    for i in order_list:
+        using_facility = Schedule.objects.raw(
+            " SELECT sch_id, facility_id" +
+            " FROM company_schedule" +
+            " WHERE prod_id = '" + i.sch_id.prod_id + "'"
+            " AND COUNT = (" +
+            " SELECT COUNT" +
+            " FROM company_schedule" +
+            " WHERE sch_id = '" + i.sch_id.sch_id + "'" +
+            ") GROUP BY facility_id "
+        )
+        using_facility_list.append(list(using_facility))
+
+    common_list = []
+    for i in range(len(using_facility_list)):
+        for j in using_facility_list[i]:
+            common_list.append(j.facility_id.facility_id)
+    common_list = set(common_list)
+    common_list = list(common_list)
+
 
     fac_list = Facility.objects.all()
     result_list = []
-    common_list = []
     duplicate = []
     if len(order_list) > 0:
         for i in fac_list:
-            for j in order_list:
-                if i.facility_id == j.sch_id.facility_id.facility_id:
-                    common_list.append(i.facility_id)
+            stateContinue = True
+            for j in common_list:
+                if i.facility_id == j:
+                    stateContinue = False;
                     continue;
-                else:
-                    result_list.append(i.facility_id)
-
-        common_list = set(common_list)
-        common_list = list(common_list)
+            if stateContinue == False:
+                continue;
+            else:
+                result_list.append(i.facility_id)
 
         result_list = set(result_list)
         result_list = list(result_list)
         result_list.sort(reverse=False)
-
 
         result = []
         final_list = []
