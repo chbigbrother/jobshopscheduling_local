@@ -11,6 +11,7 @@ from django.template import loader
 from rest_framework import serializers
 from openpyxl import load_workbook
 from fileutils.forms import FileUploadCsv
+from fileutils.models import FileUploadCsv as fileUploadCsv
 from .models import OrderSchedule, OrderList
 from company.models import *
 from common.views import id_generate, date_str
@@ -441,8 +442,9 @@ def order_csv_download_blank(request):
 
 # Draw table after reading csv file
 def order_read_csv(request):
-    readFile = request.FILES['file'];
-    read = pd.read_csv('./media/' + readFile.name, encoding='UTF8')
+    # readFile = request.FILES['file'];
+    readFile = fileUploadCsv.objects.all().order_by('id').last()
+    read = pd.read_csv('./media/' + str(readFile.file), encoding='UTF8')
     data_list = []
 
     # 예외처리
