@@ -15,5 +15,6 @@ urlpatterns = [
     path('csv/read/', order_read_csv, name='order.order_read_csv'),
     path('csv/delete/read/', order_delete_read_csv, name='order.order_delete_read_csv'),
     path('csv/create/', order_update_csv, name='order.csvCreate'),
+    path('modal/create/', order_update_modal, name='order.order_update_modal'),
     path('test/', order_test, name='test'),
 ]

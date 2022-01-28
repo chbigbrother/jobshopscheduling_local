@@ -39,6 +39,11 @@ def date_str(date):
 
     return str_date
 
+def date_remove(date):
+    str_date = date.replace('-', '').replace('-', '')
+
+    return str_date
+
 def calc_date_str(datefrom, dateto):
     date_from = datetime.strptime(datefrom, "%Y%m%d")
     date_to = datetime.strptime(dateto, "%Y%m%d")

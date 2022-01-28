@@ -31,8 +31,10 @@ def generate_prediction():
     x_names = ["total processing time", 'machine numbers']
     x = new_data.iloc[:, ~new_data.columns.isin(x_names)]
     pre=model.predict(x.values.reshape(len(x),200,1))
-
-    pre_df = pd.DataFrame(pre[1].round(), columns=["total processing time"])
+    negative_to_positive = abs(pre[1])
+    if negative_to_positive.round() == 0:
+        negative_to_positive = 1
+    pre_df = pd.DataFrame(negative_to_positive.round(), columns=["total processing time"])
     pre_df["machine numbers"] = pd.DataFrame(pre[0].argmax(axis=1))
     pre_df["machine numbers"].replace({0: 1, 1: 2, 2: 3, 3: 4, 4: 5, 5: 6, 6: 8}, inplace=True)
     pre_df["machine ID"] = new_coming_data["machine"]

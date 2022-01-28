@@ -32,6 +32,7 @@ def find_first_available_place(start_ctr, duration, machine_jobs):
     max_duration = start_ctr + duration
 
     # max_duration is either the start_ctr + duration or the max(possible starts) + duration
+
     if machine_jobs:
         for job in machine_jobs:
             max_duration_list.append(job[3] + job[1])  # start + process time
@@ -69,7 +70,6 @@ def decode(pb_instance, os, ms):
         machine = o[job][indexes[job]][index_machine]['machine']
         prcTime = o[job][indexes[job]][index_machine]['processingTime']
         start_cstr = start_task_cstr[job]
-
         # Getting the first available place for the operation
         start = find_first_available_place(start_cstr, prcTime, machine_operations[machine - 1])
         name_task = "{}-{}".format(job, indexes[job]+1)
@@ -79,6 +79,8 @@ def decode(pb_instance, os, ms):
         # Updating indexes (one for the current task for each job, one for the start constraint
         # for each job)
         indexes[job] += 1
+
+
         start_task_cstr[job] = (start + prcTime)
 
     return machine_operations
@@ -86,6 +88,7 @@ def decode(pb_instance, os, ms):
 
 def translate_decoded_to_gantt(machine_operations):
     data = {}
+
     for idx, machine in enumerate(machine_operations):
         machine_name = "Machine-{}".format(idx + 1)
         operations = []

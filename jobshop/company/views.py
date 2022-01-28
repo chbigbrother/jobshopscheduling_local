@@ -11,7 +11,7 @@ from fileutils.forms import FileUploadCsv
 from fileutils.models import FileUploadCsv as fileUploadCsv
 from .models import *
 from order.models import *
-from common.views import id_generate, date_str
+from common.views import id_generate, date_str, comma_str
 import pandas as pd
 import json, csv, datetime
 from urllib.parse import quote
@@ -67,6 +67,77 @@ def comp_production_view(request):
 
     return render(request, template_name, date)
 
+# 설비정보검색 데이터 다운로드 csv
+def comp_facility_csv_download(request):
+    filename = request.user.groups.values('name')[0]['name'] + "_설비정보.csv"
+
+    # response content type
+    response = HttpResponse(
+        content_type='text/csv',
+        headers={'Content-Disposition': "attachment;filename*=UTF-8''{}".format(quote(filename.encode('utf-8')))},
+    )
+
+    writer = csv.writer(response, csv.excel)
+    response.write(u'\ufeff'.encode('utf8'))
+
+    # write the headers
+    writer.writerow([
+        smart_str(u"회사명"),
+        smart_str(u"설비 호기"),
+    ])
+    # get data from database or from text file....
+    comp_list = Facility.objects.filter(comp_id=request.user.groups.values('id')[0]['id'])
+
+    if not comp_list:
+        return response
+    else:
+        for comp in comp_list:
+            writer.writerow([
+                smart_str(comp.comp_id.comp_name),
+                smart_str(comp.facility_name),
+            ])
+    return response
+
+# 설비현황검색 데이터 다운로드 csv
+def comp_production_csv_download(request):
+    filename = request.user.groups.values('name')[0]['name'] + "_설비현황.csv"
+
+    # response content type
+    response = HttpResponse(
+        content_type='text/csv',
+        headers={'Content-Disposition': "attachment;filename*=UTF-8''{}".format(quote(filename.encode('utf-8')))},
+    )
+
+    writer = csv.writer(response, csv.excel)
+    response.write(u'\ufeff'.encode('utf8'))
+
+    # write the headers
+    writer.writerow([
+        smart_str(u"회사명"),
+        smart_str(u"작업호기"),
+        smart_str(u"작업시작일자"),
+        smart_str(u"작업종료일자"),
+        smart_str(u"고객요청기한"),
+        smart_str(u"제품명"),
+        smart_str(u"생산량(yd)"),
+    ])
+    # get data from database or from text file....
+    dateFrom, dateTo, order_list = comp_production_search(request)
+    if not order_list:
+        return response
+    else:
+        for ord in order_list:
+            writer.writerow([
+                smart_str(ord['comp_name']),
+                smart_str(ord['facility_name']),
+                smart_str(ord['work_str_date']),
+                smart_str(ord['work_end_date']),
+                smart_str(ord['exp_date']),
+                smart_str(ord['prod_name']),
+                smart_str(ord['amount']),
+            ])
+    return response
+
 # 설비현황작업범위검색
 def comp_production_search(request):
     date = datetime.datetime.today() - timedelta(days=3)
@@ -80,27 +151,55 @@ def comp_production_search(request):
 
         order_list = OrderSchedule.objects.filter(sch_id__work_str_date__gte=date_from).filter(
             sch_id__work_str_date__lte=date_to).filter(sch_id__comp_id=request.user.groups.values('id')[0]['id'])
+
     else:
         sch_date_from = date
         sch_date_to = datetime.datetime.today()
         order_list = OrderSchedule.objects.filter(sch_id__work_str_date__gte=date.strftime("%Y%m%d"),
                                                   sch_id__work_str_date__lte=datetime.datetime.today().strftime(
                                                       "%Y%m%d")).filter(sch_id__comp_id=request.user.groups.values('id')[0]['id'])
+    #####################################################################
+    using_facility_list = []
+
+    for i in order_list:
+        using_facility = Schedule.objects.raw(
+            " SELECT * " +
+            " FROM company_schedule" +
+            " WHERE prod_id = '" + i.sch_id.prod_id + "'" +
+            " AND SUBSTRING(sch_id, 4, 8) = '" + i.sch_id.sch_id[3:11] + "'"
+                                                                         " AND COUNT = (" +
+            " SELECT COUNT" +
+            " FROM company_schedule" +
+            " WHERE sch_id = '" + i.sch_id.sch_id + "'" +
+            ") GROUP BY facility_id "
+        )
+        using_facility_list.append(list(using_facility))
+
+    fac_name_list = []
+    for i in using_facility_list:
+        comma_list = []
+        for j in i:
+            comma_list.append(j.facility_id.facility_name)
+        fac_name_list.append(comma_list)
 
     result_list = []
-    for i in range(len(order_list.values())):
-        result = {}
-        result['comp_id'] = order_list[i].sch_id.comp_id.comp_id
-        result['comp_name'] = order_list[i].sch_id.comp_id.comp_name
-        result['facility_name'] = order_list[i].sch_id.facility_id.facility_name
-        result['work_str_date'] = date_str(order_list[i].sch_id.work_str_date)
-        result['work_end_date'] = date_str(order_list[i].sch_id.work_end_date)
-        result['amount'] = order_list[i].order_id.amount
-        result['prod_name'] = order_list[i].order_id.prod_id.prod_name
-        result['exp_date'] = date_str(order_list[i].order_id.exp_date)
-        result['created_at'] = order_list[i].created_at
-        result['modified_at'] = order_list[i].modified_at
+    for ord in range(len(order_list.values())):
+        for i in using_facility_list:
+            for j in i:
+                if order_list[ord].order_id.prod_id.prod_id == j.prod_id:
+                    result = {}
+                    result['comp_id'] = j.comp_id.comp_id
+                    result['comp_name'] = j.comp_id.comp_name
+                    result['facility_name'] = str(fac_name_list[ord]).replace('[', '').replace(']', '') # j.facility_id.facility_name
+                    result['work_str_date'] = date_str(j.work_str_date)
+                    result['work_end_date'] = date_str(j.work_end_date)
+                    result['amount'] = order_list[ord].order_id.amount
+                    result['prod_name'] = order_list[ord].order_id.prod_id.prod_name
+                    result['exp_date'] = date_str(order_list[ord].order_id.exp_date)
+                    result['created_at'] = j.created_at
+                    result['modified_at'] = j.modified_at
         result_list.append(result)
+    #####################################################################
 
     return sch_date_from.strftime("%Y-%m-%d"), sch_date_to.strftime("%Y-%m-%d"), result_list
 
@@ -156,8 +255,28 @@ def comp_product_view(request):
         'dateFrom': date.strftime("%Y-%m-%d"),
         'path': '업체정보 / 제품정보검색'
     }
-    
     return render(request, template_name, date)
+
+# 제품 검색
+def product_search(request):
+    result = Product.objects.all()
+    result_list = []
+    for i in result:
+        result_dict = {}
+        result_dict['prod_id'] = i.prod_id
+        result_dict['comp_id'] = i.comp_id_id
+        result_dict['prod_name'] = i.prod_name
+        result_dict['density'] = i.density
+        result_dict['rpm'] = i.rpm
+        result_dict['daily_prod_rate'] = i.rpm
+        result_list.append(result_dict)
+
+    def json_default(value):
+        if isinstance(value, datetime.date):
+            return value.strftime('%Y-%m-%d')
+        raise TypeError('not JSON serializable')
+
+    return HttpResponse(json.dumps(result_list, default=json_default, ensure_ascii=False), content_type="application/json")
 
 # csv 파일 업로드
 def upload_file(request):
@@ -274,6 +393,30 @@ def comp_prod_update_csv(request):
             )
 
     return redirect("/company/product/search/")
+
+# Save data into the Database by reading csv file
+def comp_prod_update_modal(request):
+    user = request.user.groups.values('id')[0]['id']
+    if request.method == 'POST':
+        request = json.loads(request.body)
+
+    # id generator
+    id_count = Product.objects.all().order_by('prod_id').last()
+    if id_count is None or not id_count:
+        int_id = 0
+    else:
+        int_id = id_count.prod_id[3:]
+    str_id = id_generate('PRD', int_id)
+    Product.objects.create(
+        prod_id=str_id,
+        comp_id=Information.objects.get(comp_id=user),
+        prod_name=request['prod_name'],
+        density=request['density'],
+        rpm=request['avg_rpm'],
+        daily_prod_rate=request['prod_rate']
+    )
+
+    return JsonResponse({"message": 'success'})
 
 # Draw table after reading csv file
 def comp_read_csv(request):
@@ -410,6 +553,19 @@ def comp_update_csv(request):        # 파일객체가 하나도 없다면 작�
 
     return redirect("/company/info/list/")
 
+def comp_update_modal(request):
+    user = request.user.groups.values('id')[0]['id']
+    if request.method == 'POST':
+        request = json.loads(request.body)
+        # id generator
+        str_id = 'FAC' + str(user) + '#' + request['comp_name'].replace("호기", "")
+        Facility.objects.create(
+            facility_id=str_id,
+            facility_name=request['comp_name'].replace("호기", ""),
+            comp_id=Information.objects.get(comp_id=user)
+        )
+    return redirect("/order/list/")
+
 # 해당 일자 작업 가능한 기계 조회
 def comp_avail_facility(request):
     user = request.user.groups.values('id')[0]['id']
@@ -429,7 +585,8 @@ def comp_avail_facility(request):
         using_facility = Schedule.objects.raw(
             " SELECT sch_id, facility_id" +
             " FROM company_schedule" +
-            " WHERE prod_id = '" + i.sch_id.prod_id + "'"
+            " WHERE prod_id = '" + i.sch_id.prod_id + "'" +
+            " AND SUBSTRING(sch_id, 4, 8) = '" + i.sch_id.sch_id[3:11] + "'"
             " AND COUNT = (" +
             " SELECT COUNT" +
             " FROM company_schedule" +

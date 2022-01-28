@@ -207,9 +207,13 @@
                                         ctx.textBaseline = 'bottom';
                                         this.data.datasets.forEach(function(dataset, i) {
                                             var meta = cht.controller.getDatasetMeta(i);
+                                            var data = dataset.label;
+                                            var arr = new Array();
+                                            arr.push(data);
                                             meta.data.forEach(function(bar, index){
-                                                var data = dataset.label;
-                                                ctx.fillText(data, bar._model.x, bar._model.y-5);
+                                                var label = arr[index];
+                                                if (typeof label == 'undefined') {label = ''}
+                                                ctx.fillText(label, bar._model.x, bar._model.y-5);
                                             })
                                         });
                                     }

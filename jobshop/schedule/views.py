@@ -60,6 +60,8 @@ def history(request):
         sch_dict['date_from'] = sch_date_from.strftime("%Y-%m-%d")
         sch_dict['date_to'] = sch_date_to.strftime("%Y-%m-%d")
         order_list = OrderList.objects.filter(prod_id=sch.prod_id)
+        if len(order_list) == 0:
+            continue;
         order_id = date_str(sch.exe_date)
 
         for i in order_list:
@@ -94,10 +96,11 @@ def draw_history_chart(request):
     for i in request.GET:
         request = json.loads(i)
 
-    id = request['orderId']
-    schDate = request['schDate']
+    id = request['orderId'] # 스케줄일자
+    schDate = request['schDate'] # 주문일자
 
     sch_list, count = schedule_list(id, schDate)
+
     result = {}
     result_list = []
     final_list = []
@@ -165,7 +168,7 @@ def schedule_list(id, schDate):
         "WHERE SUBSTRING(sch_id, 4, 8) = '" + date_from + "' ")
 
     count = Schedule.objects.raw(
-        ' SELECT sch_id, MAX(COUNT) ' +
+        ' SELECT sch_id, MAX(COUNT) as count ' +
         ' FROM company_schedule' +
         ' WHERE SUBSTRING(sch_id, 4, 8) = "' + date_from + '"')
     sch_list = []
@@ -217,8 +220,8 @@ def monthly_confirmed_order(request):
 def draw_graph(request):
     count = Schedule.objects.filter(comp_id=request.user.groups.values('id')[0]['id'],
                                     created_at__year=now.year, created_at__month=now.month, created_at__day=now.day)
-
     count = count.aggregate(Max('count'))
+    print(now.year, ' / ', now.month, ' / ', now.day)
     for i in Group.objects.all():
         for j in Group.objects.filter(name=i).values():
             schedule_list = Schedule.objects.filter(count=count['count__max'],
@@ -247,7 +250,7 @@ def generate_data(request):
     # 회사 아이디를 얻기 위한 유저 정보
     user_id = request.user.groups.values('id')[0]['id']
     
-    data = open("./schedule/dytech/new_coming.csv", "w", encoding="UTF-8")
+    data = open("./schedule/dytech/new_coming.csv", "w", newline="", encoding="UTF-8")
     product_list = []   # 제품 리스트 (Queryset 담기)
     product_name_list = []  # 제품명 리스트
     facility_list = []  # 기계 리스트 (Queryset 담기)
@@ -255,7 +258,7 @@ def generate_data(request):
     column = []         
     rows = ["작업 호기", "제품명", "실제 기계 밀도", "RPM", "생산량(YD)"]
     column.append(rows)
-    
+    big_fac_num = []
     # POST 로 받아온 값 dict 로 담기
     if request.method == 'POST':
         request = json.loads(request.body)
@@ -263,59 +266,68 @@ def generate_data(request):
         fac = request['fac']    # 기계호기
         amt = request['amt']    # 오더 수량
         avail_fac_num = request['avail_fac_num'] # 사용 가능한 기계 대수
+        big_fac_num = request['avail_fac_num'] # 사용 가능한 기계 대수 (최대)
+        # opt_num = request['set_opt_num'] # 분류할 작업의 갯수
         work_str = request['work_str_date'].replace('-', '').replace('-', '')       # 작업시작일자
         work_exp_date = request['work_exp_date'].replace('-', '').replace('-', '')  # 작업종료일자
 
-    # 엑셀 생성시 사용 가능한 기계 대수를 수량만큼 나눠서 추가해주기
-    # 1. 선택한 기계만큼 사용가능한 기계 대수 안에서 rand 돌리기
+    # 사용 가능한 기계 대수 중 큰 수 고르기
+    big_fac_set = set(big_fac_num)
+    big_fac_num = list(big_fac_set)
+    big_fac_list = []
+    for i in big_fac_num:
+        big_fac_list.append(int(i))
+    big_fac_num = max(big_fac_list) # 가장 큰 기계 대수
+
+    # new_coming.csv 파일 생성
     writer = csv.writer(data)
+    # 제품 정보 가져오기
     for i in ord:
         product_name = Product.objects.get(prod_name=i)
         product_name = product_name.prod_name
         product_list.append(Product.objects.get(prod_name=i))
         product_name_list.append(product_name)
-
+    # 선택한 기계 정보 가져오기
     for f in fac:
+        print(f)
         facility_name = Facility.objects.get(facility_id=f.replace('호기', ''))
         facility_name = facility_name.facility_name
         facility_list.append(facility_name)
+    # 기계 대수만큼 리스트에 넣기
+    avail_fac_list = []
+    for k in range(big_fac_num):
+        avail_fac_list.append(facility_list[k])
+    avail_rand_list = avail_fac_list
 
     for i in range(len(product_list)):
-        avail_rand_list = [random.choice(facility_list) for k in range(int(avail_fac_num[i]))]
-        value = (int(amt[i]) // int(avail_fac_num[i]))
-        rest = (int(amt[i]) % int(avail_fac_num[i]))
-        last_num = len(avail_rand_list) -1
-        if rest > 0:
-            avail_rand_list = [random.choice(facility_list) for k in range(int(avail_fac_num[i])+ 1)]
-            for j in range(len(avail_rand_list)):
-                if j == last_num:
-                    rows = []
-                    rows.append(avail_rand_list[j])  # 작업 호기
-                    rows.append(product_list[i].prod_name)  # 제품명
-                    rows.append(product_list[i].density)  # 실제 기계 밀도
-                    rows.append(product_list[i].rpm)  # RPM
-                    rows.append(rest)  # 생산량(YD)
-                    column.append(rows)
-                else:
-                    rows = []
-                    rows.append(avail_rand_list[j])  # 작업 호기
-                    rows.append(product_list[i].prod_name)  # 제품명
-                    rows.append(product_list[i].density)  # 실제 기계 밀도
-                    rows.append(product_list[i].rpm)  # RPM
-                    rows.append(value)  # 생산량(YD)
-                    column.append(rows)
-        else:
-            for j in range(len(avail_rand_list)):
-                rows = []
-                rows.append(avail_rand_list[j])  # 작업 호기
-                rows.append(product_list[i].prod_name)  # 제품명
-                rows.append(product_list[i].density)  # 실제 기계 밀도
-                rows.append(product_list[i].rpm)  # RPM
-                rows.append(value)  # 생산량(YD)
-                column.append(rows)
-
-
-
+        days = int(amt[i]) // product_list[i].daily_prod_rate # 수량과 일일 생산량에 따른 필요한 날짜 계산
+        work_div_days = days * 3  # 오전, 오후, 야간
+        demands = int(amt[i]) // work_div_days  # 수량과, 일일생산량, 작업반에 따른 하루 한 작업반의 작업 수량
+        demands_rest = int(amt[i]) % work_div_days  # 수량과, 일일생산량, 작업반에 따른 하루 한 작업반의 나머지 수량
+        count = 0;
+        for j in range(days): # 5
+            for k in range(int(avail_fac_num[i])): # 2
+                for h in range(3): # 오전, 오후, 야간
+                    count = count + 1;
+                    if count > work_div_days:
+                        break;
+                    else:
+                        if count == work_div_days:
+                            rows = []
+                            rows.append(avail_rand_list[k])  # 작업 호기
+                            rows.append(product_list[i].prod_name)  # 제품명
+                            rows.append(product_list[i].density)  # 실제 기계 밀도
+                            rows.append(product_list[i].rpm)  # RPM
+                            rows.append(demands + demands_rest)  # 생산량(YD)
+                            column.append(rows)
+                        else:
+                            rows = []
+                            rows.append(avail_rand_list[k])  # 작업 호기
+                            rows.append(product_list[i].prod_name)  # 제품명
+                            rows.append(product_list[i].density)  # 실제 기계 밀도
+                            rows.append(product_list[i].rpm)  # RPM
+                            rows.append(demands)  # 생산량(YD)
+                            column.append(rows)
     # 리스트 형식의 데이터가 있는 경우 루프를 돌려서 입력 가능
     for col in column:
         writer.writerow(col)
@@ -336,33 +348,32 @@ def generate_data(request):
     for i in result.keys():
         keys_list.append(i)
 
-    list = []
+    s_list = []
     for i in range(len(result['color'])):
         line = []
         for keys in keys_list:
             line.append(result[keys][i])
-        list.append(line)
+        s_list.append(line)
 
     # sch_id    comp_id    facility_id     count     order_id_num     x_axis_1    y_axis_1    work_str_date   work_end_date
-    for i in range(len(list)):
+    for i in range(len(s_list)):
         sch_id_cnt = len(Schedule.objects.all())
-        product_id = Product.objects.get(prod_name=product_name_list[int(list[i][2][:1])-1])
-        y_axis = list[i][6]
+        product_id = Product.objects.get(prod_name=product_name_list[int(s_list[i][2][:1]) - 1])
+        y_axis = s_list[i][6]
         Schedule.objects.update_or_create(
-            sch_id='SCH' + list[i][0] + str(int(sch_id_cnt) + 1),
+            sch_id='SCH' + s_list[i][0] + str(int(sch_id_cnt) + 1),
             facility_id=Facility.objects.get(facility_name=y_axis),
             comp_id=Information.objects.get(comp_id=user_id),
             prod_id=product_id.prod_id,
             count=int(count) + 1,
-            sch_color=list[i][1],
-            order_id_num=list[i][2],  # 추후 오더 데이터에서 가져오기
-            x_axis_1=list[i][4],
-            x_axis_2=list[i][5],
+            sch_color=s_list[i][1],
+            order_id_num=s_list[i][2],  # 추후 오더 데이터에서 가져오기
+            x_axis_1=s_list[i][4],
+            x_axis_2=s_list[i][5],
             y_axis_1=y_axis,
             work_str_date=work_str,
             work_end_date=work_exp_date
         )
-
 
     return JsonResponse({"message": 'success'})
 
@@ -643,7 +654,7 @@ def delete_order(request):
 
 
 def test_data(request):
-    generate_data()
+    generate_data(request)
 
     # print(json.dumps(schedule_list, default=json_default))
     # return HttpResponse(json.dumps(list(final_result.values()), default=json_default))

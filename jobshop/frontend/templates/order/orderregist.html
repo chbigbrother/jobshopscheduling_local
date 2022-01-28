@@ -4,10 +4,131 @@
     .dataTables_wrapper .dataTables_filter {display:none;}
     .pagination {display:none;}
     .dataTables_info {display:none;}
+    .ms-select {width: 10%;}
+    .ms-select-all {width: 10%;}
     input {border:none; width:100%; color:#858796;}
 </style>
-<!-- Modal-->
-<div class="modal fade" id="excelUploadModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" style="padding-right: 17px; display: block;" aria-modal="true">
+
+<div class="card shadow mb-4">
+    <div class="card-body">
+        <div class="pknu-table-responsive">
+            <div class="no-arrow no-arrow-btn" style="position:absolute; right:1.2%; z-index:100;">
+                <a href="#" class="btn btn-info btn-icon-split modal-upload-btn">
+                    <span class="icon text-white-50">
+                        <i class="fas fa-check"></i>
+                    </span>
+                    <span class="text">수주개별업로드</span>
+                </a>
+                <a href="#" class="btn btn-success btn-success-csv btn-icon-split upload-btn">
+                    <span class="icon text-white-50">
+                        <i class="fas fa-check"></i>
+                    </span>
+                    <span class="text">.csv 업로드</span>
+                </a>
+            </div>
+            <form id="orderForm" method="POST" action="{% url 'order.csvCreate' %}">
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>순번</th>
+                            <th>고객명</th>
+                            <th>주문일자</th>
+                            <th>마감기한</th>
+                            <th>제품명</th>
+                            <th>수량</th>
+                            <th>전화번호</th>
+                            <th>이메일</th>
+                            <th style="text-align:center;">관리</th>
+                        </tr>
+                    </thead>
+                    <tbody class="tbody-data">
+
+                    </tbody>
+                </table>
+                <div class="dropdown dropdown-btn no-arrow" style="text-align:right;">
+                    <button type="submit" value="OrderList" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
+                        <i class="fas fa-upload fa-sm text-white-50"></i> 수주문서업로드
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<!-- Scroll to Top Button-->
+<a class="scroll-to-top rounded" href="#page-top">
+    <i class="fas fa-angle-up"></i>
+</a>
+
+
+<!-- OrderUploadModal -->
+<div class="modal fade" id="uploadModal" role="dialog" aria-labelledby="uploadModal" aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog modal-dialog2" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="exampleModalLabel">수주 데이터 업로드</h4>
+                <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">×</span>
+                    </button>
+            </div>
+            <div class="modal-body">
+                <div class="row pknu-modal-row">
+                    <div class="col-md-3"><label class="pt-2" style="font-size:0.95rem;">고객명</label></div>
+                    <div class="col-lg-6">
+                        <input class="form-control text-center" type="text" name="custname" id="custname" />
+                    </div>
+                </div>
+                <div class="row pknu-modal-row">
+                    <div class="col-md-3"><label for="orddate" class="pt-2">주문일자</label></div>
+                    <div class="col-lg-6">
+                        <input class="form-control text-center" type="text" name="orddate" id="orddate" />
+                    </div>
+                </div>
+                <div class="row pknu-modal-row">
+                    <div class="col-md-3"><label class="pt-2">마감기한</label></div>
+                    <div class="col-lg-6">
+                        <input class="form-control text-center" type="text" name="estdate" id="estdate" />
+                    </div>
+                </div>
+                <div class="row pknu-modal-row">
+                    <div class="col-md-3"><label for="prodname" class="pt-2" style="font-size:0.95rem;">제품명</label></div>
+                    <div class="col-lg-6" id="prodname">
+                        <!-- <input class="form-control text-center" type="text" name="dateFrom"/> -->
+                    </div>
+                </div>
+                <div class="row pknu-modal-row">
+                    <div class="col-md-3"><label class="pt-2" style="font-size:0.95rem;">수량</label></div>
+                    <div class="col-lg-6">
+                        <input class="form-control text-center" type="text" name="demand" id="demand" />
+                    </div>
+                </div>
+                <div class="row pknu-modal-row">
+                    <div class="col-md-3"><label for="phonenum" class="pt-2" style="font-size:0.95rem;">전화번호</label></div>
+                    <div class="col-lg-6">
+                        <input class="form-control text-center" type="text" name="dateFrom" id="phonenum" />
+                    </div>
+                </div>
+                <div class="row pknu-modal-row">
+                    <div class="col-md-3"><label for="email" class="pt-2" style="font-size:0.95rem;">이메일</label></div>
+                    <div class="col-lg-6">
+                        <input class="form-control text-center" type="text" name="dateFrom" id="email" />
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" id="modal-footer">
+                <button type="button" class="d-none d-sm-inline-block btn btn-sm btn-danger shadow-sm" data-dismiss="modal">
+                    <i class="far fa-window-close fa-sm text-white-50"></i> 취소
+                </button>
+                <a class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm" id="modal-upload">
+                    <i class="fas fa-upload fa-sm text-white-50"></i> 수주데이터업로드
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- OrderUploadModal -->
+
+<!-- .csvModal-->
+<div class="modal fade" id="excelUploadModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" style="padding-right: 17px;" aria-modal="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <!--modal header-->
@@ -48,51 +169,9 @@
         </div>
     </div>
 </div>
-<!-- Modal-->
+<!-- .csvModal-->
 
-<div class="card shadow mb-4">
-    <div class="card-body">
-        <div class="pknu-table-responsive">
-            <div class="no-arrow no-arrow-btn" style="position:absolute; right:1.2%; z-index:100;">
-                <a href="#" class="btn btn-success btn-icon-split upload-btn">
-                    <span class="icon text-white-50">
-                        <i class="fas fa-check"></i>
-                    </span>
-                    <span class="text">수주문서업로드</span>
-                </a>
-            </div>
-            <form id="orderForm" method="POST" action="{% url 'order.csvCreate' %}">
-                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
-                    <thead>
-                        <tr>
-                            <th>순번</th>
-                            <th>고객명</th>
-                            <th>주문일자</th>
-                            <th>마감기한</th>
-                            <th>제품명</th>
-                            <th>수량</th>
-                            <th>전화번호</th>
-                            <th>이메일</th>
-                            <th style="text-align:center;">관리</th>
-                        </tr>
-                    </thead>
-                    <tbody class="tbody-data">
 
-                    </tbody>
-                </table>
-                <div class="dropdown dropdown-btn no-arrow" style="text-align:right;">
-                    <button type="submit" value="OrderList" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
-                        <i class="fas fa-upload fa-sm text-white-50"></i> 수주문서업로드
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-<!-- Scroll to Top Button-->
-<a class="scroll-to-top rounded" href="#page-top">
-    <i class="fas fa-angle-up"></i>
-</a>
 
 <!--게시판 관련 js-->
 <!-- Page level plugins -->
@@ -109,13 +188,21 @@
     }
     var fileName = "";
     $(function(){
+
+    const today = moment();
+        // 검색 날짜 init
+        flatpickr("#orddate, #estdate", {
+            locale: Flatpickr.l10ns.ko,
+            enableTime: false,
+            dateFormat: "Y-m-d",
+            disableMobile: true,
+            defaultDate: [today.format('YYYY-MM-DD')]
+        });
+
         $(".dropdown-btn").css('display', 'none');
-        $('#excelUploadModal').modal({backdrop: 'static', keyboard: false})
-        $("#excelUploadModal").modal("show");
 
         // csv 업로드
         var _url = "{% url 'order.order_read_csv' %}";
-
         var formData = new FormData();
         //dropzone에 파일등록
         var dropzone = new Dropzone("#orderDocDropzone", {
@@ -140,9 +227,91 @@
 
             }
         });
+
+        // 수주 개별 업로드 버튼
+        $('.modal-upload-btn').on('click', function(){
+            $('#uploadModal').modal({backdrop: 'static', keyboard: false})
+            $("#uploadModal").modal("show");
+        });
+        // .csv 업로드 버튼
         $('.upload-btn').on('click', function(){
+            $('#excelUploadModal').modal({backdrop: 'static', keyboard: false})
             $("#excelUploadModal").modal("show");
         });
+
+        // 제품명 select box 그리기
+        prodDraw();
+
+        // 제품명 조회
+        var result_data;
+        function prodSearch() {
+            $.ajax({
+                url: "{% url 'company.product_search' %}",
+                method: 'GET',
+                dataType: 'json',
+                async: false,
+                contentType: 'application/json',
+                processData: false,
+                success: function(result) {
+                    result_data = result;
+                }
+
+            });
+            return result_data;
+        }
+        // 제품명 select box 그리기
+        function prodDraw() {
+            $('#prodname').html('');
+            var result = prodSearch();
+            if (result.length > 1) {
+                var innerHTML = '<select class="form-control" name="select" id="selectProduct" style="width:257px;">';
+                for (var i = 0; i < result.length; i++) {
+                    if (typeof result[i] !== 'undefined') {
+                        innerHTML += '<option class="ms-select ' + result[i].prod_id + '" value="' + result[i].prod_name + '">' + result[i].prod_name + ' </option>';
+                    }
+                }
+            } else {
+                var innerHTML = '<input type="text" class="form-control" placeholder="해당일에 주문데이터가 없습니다." value="" readonly="readonly" />';
+            }
+            $('#prodname').html(innerHTML);
+            return;
+        }
+
+        // 수주개별업로드 수주문서업로드 버튼 클릭 이벤트
+        $("#modal-upload").on("click", function(){
+            var sch_date = $('#orddate').val();
+            var exp_date = $('#estdate').val();
+            if (exp_date < sch_date || exp_date == sch_date){
+                Swal.fire({
+                  icon: 'error',
+                  title: '마감기한 날짜 조정이 필요합니다.',
+                  showCancelButton: true,
+                  text: '마감기한은 주문일자보다 커야 합니다.'
+                }).then(function(){
+
+                });
+            } else {
+                var obj = new Object();
+                obj.cust_name = $('#custname').val();
+                obj.sch_date = $('#orddate').val();
+                obj.exp_date = $('#estdate').val();
+                obj.prod_name = $('#selectProduct').val();
+                obj.amount = $('#demand').val();
+                obj.contact = $('#phonenum').val();
+                obj.email = $('#email').val();
+                $.ajax({
+                    url: "{% url 'order.order_update_modal' %}",
+                    data : JSON.stringify(obj),
+                    type:'json',
+                    contentType: 'application/json',
+                    method: "POST",
+                    success: function(data){
+                        $(location).attr('href', "{% url 'order.order_list_view' %}")
+                    }
+                })
+            }
+        });
+
         $("#fileReadBtn").on("click", function(e){
             $.ajax({
                 url: _url,
@@ -190,11 +359,12 @@
                 }
             });
         });
-        $('.btn-icon-split').on('click', function(){
+        $('.btn-success-csv').on('click', function(){
             $('#excelUploadModal').modal('show');
         });
         $('#form').attr('action',"{% url 'order.csvCreate' %}").submit();
     });
+
     function deletedOrder(name, amount){
         var selectdata = new Object();
         selectdata.name = name;

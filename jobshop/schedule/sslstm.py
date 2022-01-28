@@ -1,14 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
-
-
-# !/usr/bin/env python
-
-
-# This code is aiming at finding one optimal solver for JSSP using Deel LSTM
-# Define the JSSP problem using one classe
 import sys
 import time
 from tensorflow import keras
@@ -42,8 +34,10 @@ def generate_prediction():
     x_names = ["total processing time", 'machine numbers']
     x = new_data.iloc[:, ~new_data.columns.isin(x_names)]
     pre=model.predict(x.values.reshape(len(x),200,1))
+    negative_to_positive = abs(pre[1].round())
 
-    pre_df = pd.DataFrame(pre[1].round(), columns=["total processing time"])
+    pre_df = pd.DataFrame(negative_to_positive, columns=["total processing time"])
+    # pre_df = pd.DataFrame(pre[1].round(), columns=["total processing time"])
     pre_df["machine numbers"] = pd.DataFrame(pre[0].argmax(axis=1))
     pre_df["machine numbers"].replace({0: 1, 1: 2, 2: 3, 3: 4, 4: 5, 5: 6, 6: 8}, inplace=True)
     pre_df["machine ID"] = new_coming_data["machine"]

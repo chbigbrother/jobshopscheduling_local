@@ -4,7 +4,6 @@
 # # Output formats are a Matplotlib chart or a LaTeX code (using pgfgantt).
 #
 
-
 import random
 import numpy as np
 import matplotlib.font_manager as font_manager
@@ -12,7 +11,7 @@ from matplotlib import colors as mcolors
 from matplotlib import pyplot as plt
 import datetime
 
-colors = ["#1984c5", "#22a7f0", "#e1a692", "#de6e56", "#e14b31", "#c23728", "#63bff0", "#a7d5ed", "#e2e2e2"]
+colors = ["#e7eb1c", "#8922f0", "#e1a692", "#c92400", "#31e1ac", "#c2289e", "#63bff0", "#a7d5ed", "#e2e2e2"]
 
 # for name, hex in mcolors.cnames.items():
 #     colors.append(name)

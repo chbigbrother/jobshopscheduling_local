@@ -14,7 +14,7 @@ from fileutils.forms import FileUploadCsv
 from fileutils.models import FileUploadCsv as fileUploadCsv
 from .models import OrderSchedule, OrderList
 from company.models import *
-from common.views import id_generate, date_str
+from common.views import id_generate, date_str, date_remove
 from company.views import Product
 from datetime import timedelta
 from .models import *
@@ -518,9 +518,7 @@ def order_update_csv(request):
             else:
                 int_id = id_count.order_id[3:]
             str_id = id_generate('ORD', int_id)
-            print(request.POST.getlist('prod_name')[i])
             prod_name = Product.objects.get(prod_name=request.POST.getlist('prod_name')[i])
-            print('prod_name: ', prod_name)
             OrderList.objects.create(
                 order_id=str_id,
                 cust_name=request.POST.getlist('cust_name')[i],
@@ -534,6 +532,30 @@ def order_update_csv(request):
 
     return redirect("/order/list/")
 
+# Save data into the Database from modal elements
+def order_update_modal(request):
+    if request.method == 'POST':
+        request = json.loads(request.body)
+
+        # id generator
+        id_count = OrderList.objects.all().order_by('order_id').last()
+        if id_count is None:
+            int_id = 0
+        else:
+            int_id = id_count.order_id[3:]
+        str_id = id_generate('ORD', int_id)
+        prod_name = Product.objects.get(prod_name=request['prod_name'])
+        OrderList.objects.create(
+            order_id=str_id,
+            cust_name=request['cust_name'],
+            sch_date=date_remove(request['sch_date']),
+            exp_date=date_remove(request['exp_date']),
+            prod_id=Product.objects.get(prod_id=prod_name.prod_id),
+            amount=request['amount'],
+            contact=request['contact'],
+            email=request['email'],
+        )
+    return redirect("/order/list/")
 
 def order_test(request):
 

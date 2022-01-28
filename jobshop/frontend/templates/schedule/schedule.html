@@ -71,7 +71,9 @@
                     <div class="col-md-3">
                         <input type="text" class="form-control" id="ordDateFrom" aria-describedby="emailHelp" placeholder="" value="{{ dateFrom }}" readonly="readonly" />
                     </div>
+                    <div class="col-md-1">
                     ~
+                    </div>
                     <div class="col-md-3">
                         <input type="text" class="form-control" id="ordDateTo" aria-describedby="emailHelp" placeholder="" value="" readonly="readonly" />
                     </div>
@@ -79,7 +81,7 @@
 
                 <div class="row pknu-modal-row">
                     <div class="col-md-3"><label class="pt-2">주문선택</label></div>
-                    <div class="col-md-6" id="divSelectOrder_old">
+                    <div class="col-md-7" id="divSelectOrder_old">
                         <!-- <select class="form-control" name="select" multiple="multiple" id="selectOrder">
 
                         </select> -->
@@ -87,13 +89,13 @@
                 </div>
                 <div class="row pknu-modal-row">
                     <div class="col-md-3"><label for="strDate" class="pt-2" style="font-size:0.95rem;">작업시작일자</label></div>
-                    <div class="col-lg-6">
+                    <div class="col-lg-7">
                         <input class="form-control text-center" type="text" name="dateFrom" id="strDate" />
                     </div>
                 </div>
                 <div class="row pknu-modal-row">
                     <div class="col-md-3"><label class="pt-2" style="font-size:0.95rem;">사용가능기계</label></div>
-                    <div class="col-md-6" id="divSelectFac">
+                    <div class="col-md-7" id="divSelectFac">
 
                     </div>
                     <!--<p class="modal-p">※ 사용 가능한 기계를 선택해 주세요.<p/>-->
@@ -114,7 +116,7 @@
                 </div>-->
                 <div class="row pknu-modal-row">
                     <div class="col-md-3"><label for="estDate" class="pt-2" style="font-size:0.95rem;">작업기한설정</label></div>
-                    <div class="col-lg-6">
+                    <div class="col-lg-7">
                         <input class="form-control text-center" type="text" name="dateFrom" id="estDate" />
                     </div>
                 </div>
@@ -221,6 +223,7 @@
         var selected_fac_list = new Array();
         var selected_amt_list = new Array();
         var selected_fac_num_list = new Array();
+        var selected_opt_num_list = new Array();
         $('.ordamt').each(function(i){
             var cnt = $('.ordamt')[i].classList.length-1;
             var prod_name = $('.ordamt')[i].id;
@@ -233,6 +236,9 @@
         $('.setMachineNum').each(function(i){
             selected_fac_num_list.push($('.setMachineNum')[i].value);
         });
+        /* $('.setOptNum').each(function(i){
+            selected_opt_num_list.push($('.setOptNum')[i].value);
+        }); */
         for (var i = 0; i < selected_fac.length; i++) {
             selected_fac_list.push(selected_fac[i].innerText);
         }
@@ -241,6 +247,7 @@
         obj.fac = selected_fac_list;
         obj.amt = selected_amt_list;
         obj.avail_fac_num = selected_fac_num_list;
+        // obj.set_opt_num = selected_opt_num_list;
         obj.work_str_date = $('#strDate').val();
         obj.work_exp_date = $('#estDate').val();
         $.ajax({
@@ -337,8 +344,8 @@
         function orderDraw() {
             $('#selectOrder').html('');
             var result = orderSearch($('#ordDateFrom').val(), $('#ordDateTo').val());
-            if (result.length > 1) {
-                var innerHTML = '<select class="form-control" name="select" multiple="multiple" id="selectOrder" style="width:257px;">';
+            if (result.length > 0) {
+                var innerHTML = '<select class="form-control" name="select" multiple="multiple" id="selectOrder" style="width:100%;">';
                 for (var i = 0; i < result.length; i++) {
                     if (typeof result[i] !== 'undefined') {
                         innerHTML += '<option class="' + result[i].amount + "_" + result[i].avail_fac_cnt + '" value="' + result[i].prod_name + '">' + result[i].prod_name + ' 수량: ' + result[i].amount + ' yd</option>';
@@ -371,10 +378,12 @@
                     var amt_cnt = amt[0]; // 수량
                     var amt_val = amt[1]; // 기계 대수
                     if (typeof selected_ord[i].value != 'undefined') {
-                        innerHTML += '<input type="text" id="' + selected_ord[i].value + '" class="col-md-9 form-control ordamt ordamt_' + amt_cnt + '" value="' + selected_ord[i].innerText + '" style="margin-right:1rem;" readonly="readonly" />';
+                        innerHTML += '<input type="text" id="' + selected_ord[i].value + '" class="form-control text-center flatpickr-input ordamt ordamt_' + amt_cnt + '" value="' + selected_ord[i].innerText + '" style="margin-bottom:1rem;" readonly="readonly" />';
                         // innerHTML += '<p class="modal-p">※ 제품별 수량에 따라 사용할 기계의 대수를 입력해 주세요.<p/>';
-                        // count
-                        innerHTML += '<input type="text" placeholder="기계 대수 설정" class="col-md-2 form-control setMachineNum" value="' + amt_val + '" /><br/>';
+                        innerHTML += '<label class="pt-2" style="margin-right:1.4rem;">기계 대수</label>';
+                        innerHTML += '<input type="text"  style="margin-right:2.2rem;" placeholder="기계 대수 설정" class="col-md-7 form-control setMachineNum" value="' + amt_val + '" />';
+                        // innerHTML += '<label class="pt-2" style="margin-right:0.5rem;">작업 개수</label>';
+                        // innerHTML += '<input type="text" placeholder="작업 개수 설정" class="col-md-2-1 form-control setOptNum" value="' + amt_val * 9 + '" /><br/>';
                         // 기계 선택 (count 수만큼 제한)
                         innerHTML += '<hr class="hr-modal"/>';
                     }
@@ -407,7 +416,7 @@
                 processData: false,
                 success: function(result) {
                     if (result.length > 1) {
-                        var innerHTML = '<select class="form-control" name="select" multiple="multiple" id="availfacnum" style="width:257px;">';
+                        var innerHTML = '<select class="form-control" name="select" multiple="multiple" id="availfacnum" style="width:100%;">';
                         for (var i = 0; i < result.length; i++) {
                             if (typeof result[i] !== 'undefined') {
                                 innerHTML += '<option value="' + result[i] + '" selected>' + result[i] + ' 호기</option>';
@@ -425,7 +434,6 @@
             });
             return;
         }
-
 
         // 작업 시작 일자에 따른 사용 가능 기계 리스트 불러오기 END
         $("#strDate").on('change', function() {
@@ -473,6 +481,7 @@
             success: function(result) {
                 var dataset = new Array();
                 var x_min = result[0].work_str_date;
+                var y_min = result[0].y_axis_1;
                 enddate = new Date(result[0].work_end_date);
                 for (var i = 0; i < result.length; i++) {
                     var xmin = new Date(result[0].work_str_date);
@@ -583,6 +592,7 @@
                                 ticks: {
                                     beginAtZero: true,
                                     stepSize: 1,
+                                    min: y_min - 1,
                                     max: ymax + 1
                                 }
                             }]
@@ -614,7 +624,6 @@
                     contentType: 'application/json',
                     processData: false,
                     success: function(data) {
-                        console.log(data);
                         var innerHTML = '';
                         if (data.length > 0) {
                             for (var i = 0; i < data.length; i++) {
