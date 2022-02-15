@@ -4,6 +4,7 @@ from django.urls import path
 
 from .views import *
 
+app_name = 'company'
 urlpatterns = [
     path('', home, name='company.index'),
     path('product/regist/', comp_product_regist, name='company.product'),

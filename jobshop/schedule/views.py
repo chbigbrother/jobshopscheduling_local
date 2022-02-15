@@ -221,7 +221,7 @@ def draw_graph(request):
     count = Schedule.objects.filter(comp_id=request.user.groups.values('id')[0]['id'],
                                     created_at__year=now.year, created_at__month=now.month, created_at__day=now.day)
     count = count.aggregate(Max('count'))
-    print(now.year, ' / ', now.month, ' / ', now.day)
+    print(now.year, ' / ', now.month, ' / ', now.day+1)
     for i in Group.objects.all():
         for j in Group.objects.filter(name=i).values():
             schedule_list = Schedule.objects.filter(count=count['count__max'],
@@ -241,7 +241,7 @@ def draw_graph(request):
             return value.strftime('%Y-%m-%d')
         raise TypeError('not JSON serializable')
 
-    # print(json.dumps(schedule_list, default=json_default))
+    print(json.dumps(schedule_list, default=json_default))
     return HttpResponse(json.dumps(schedule_list, default=json_default))
 
 # JSSP 스케쥴링 실행

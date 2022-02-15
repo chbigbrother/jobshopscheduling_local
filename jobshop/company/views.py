@@ -62,6 +62,7 @@ def comp_production_view(request):
         "comp_list": order_list,
         'dateFrom': dateFrom,
         'dateTo': dateTo,
+        'app_name': 'company',
         'path': '업체정보 / 설비현황검색'
     }
 

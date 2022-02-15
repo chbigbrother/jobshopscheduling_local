@@ -26,7 +26,7 @@
                     <span class="text">.csv 업로드</span>
                 </a>
             </div>
-            <form id="orderForm" method="POST" action="{% url 'order.csvCreate' %}">
+            <form id="orderForm" method="POST" action="{% url 'order:order.csvCreate' %}">
                 <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
                     <thead>
                         <tr>
@@ -156,7 +156,7 @@
             <!--modal body-->
             <!--modal footer-->
             <div class="modal-footer">
-                <a href="{% url 'order.order_csv_download_blank' %}" class="btn btn-info btn-icon-split upload-btn">
+                <a href="{% url 'order:order.order_csv_download_blank' %}" class="btn btn-info btn-icon-split upload-btn">
                     <span class="icon text-white-50">
                         <i class="fas fa-check"></i>
                     </span>
@@ -202,11 +202,11 @@
         $(".dropdown-btn").css('display', 'none');
 
         // csv 업로드
-        var _url = "{% url 'order.order_read_csv' %}";
+        var _url = "{% url 'order:order.order_read_csv' %}";
         var formData = new FormData();
         //dropzone에 파일등록
         var dropzone = new Dropzone("#orderDocDropzone", {
-            url: "{% url 'upload' %}",
+            url: "{% url 'company:upload' %}",
             addRemoveLinks: true,
             maxFiles: 1,
             init: function(e) {
@@ -246,7 +246,7 @@
         var result_data;
         function prodSearch() {
             $.ajax({
-                url: "{% url 'company.product_search' %}",
+                url: "{% url 'company:company.product_search' %}",
                 method: 'GET',
                 dataType: 'json',
                 async: false,
@@ -300,13 +300,13 @@
                 obj.contact = $('#phonenum').val();
                 obj.email = $('#email').val();
                 $.ajax({
-                    url: "{% url 'order.order_update_modal' %}",
+                    url: "{% url 'order:order.order_update_modal' %}",
                     data : JSON.stringify(obj),
                     type:'json',
                     contentType: 'application/json',
                     method: "POST",
                     success: function(data){
-                        $(location).attr('href', "{% url 'order.order_list_view' %}")
+                        $(location).attr('href', "{% url 'order:order.order_list_view' %}")
                     }
                 })
             }
@@ -362,7 +362,7 @@
         $('.btn-success-csv').on('click', function(){
             $('#excelUploadModal').modal('show');
         });
-        $('#form').attr('action',"{% url 'order.csvCreate' %}").submit();
+        $('#form').attr('action',"{% url 'order:order.csvCreate' %}").submit();
     });
 
     function deletedOrder(name, amount){
@@ -377,7 +377,7 @@
           text: ''
         }).then(function(){
             $.ajax({
-                url: "{% url 'order.order_delete_read_csv' %}",
+                url: "{% url 'order:order.order_delete_read_csv' %}",
                 data : JSON.stringify(selectdata),
                 type:'json',
                 contentType: 'application/json',

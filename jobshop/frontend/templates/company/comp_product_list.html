@@ -7,7 +7,7 @@
     <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
         <h6 class="m-0 font-weight-bold text-primary">조회</h6>
         <div class="dropdown no-arrow">
-            <a href="{% url 'company.prod_csv_download' %}" class="btn btn-success btn-icon-split">
+            <a href="{% url 'company:company.prod_csv_download' %}" class="btn btn-success btn-icon-split">
                 <span class="icon text-white-50">
                     <i class="fas fa-check"></i>
                 </span>
@@ -41,8 +41,8 @@
                         <td>{{comp.created_at}}</td>
                         <td>{{comp.modified_at}}</td>
                         <td class="{% if user.groups.all.0.name == 'customer' %} none {% endif %}" style="text-align:center;">
-                            <a href="" id="edit_{{ comp.id }}"><i class="far fa-edit {{ comp.id }}"></i></a>
-                            <a href="" id="delete_{{ comp.prod_id }}" style="margin-left:10px;"><i class="fas fa-trash-alt"></i></a>
+                            <a href="#" id="edit_{{ comp.prod_id }}"><i class="far fa-edit {{ comp }}"></i></a>
+                            <a href="#" id="delete_{{ comp.prod_id }}" style="margin-left:10px;"><i class="fas fa-trash-alt"></i></a>
                         </td>
                     </tr>
                     {% endfor %}
@@ -52,7 +52,54 @@
     </div>
 </div>
 
-
+<!-- ***************************************************************** 관리 Modal ***************************************************************** -->
+<div class="modal fade" id="editModal" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog modal-dialog2" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                    <h4 class="modal-title" id="exampleModalLabel">제품정보 관리</h4>
+                    <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                </div>
+            <div class="modal-body">
+                <div class="row pknu-modal-row">
+                    <div class="col-md-3"><label for="prodname" class="pt-2">제품명</label></div>
+                    <div class="col-md-6" id="divCompName">
+                        <input class="form-control text-center" type="text" name="prodname" id="prodname" />
+                    </div>
+                </div>
+                <div class="row pknu-modal-row">
+                    <div class="col-md-3"><label for="density" class="pt-2" style="font-size:0.95rem;">밀도</label></div>
+                    <div class="col-lg-6" >
+                         <input class="form-control text-center" type="text" name="density" id="density" />
+                    </div>
+                </div>
+                <div class="row pknu-modal-row">
+                    <div class="col-md-3"><label for="avgrpm" class="pt-2" style="font-size:0.95rem;">평균rpm</label></div>
+                    <div class="col-lg-6" >
+                         <input class="form-control text-center" type="text" name="avgrpm" id="avgrpm" />
+                    </div>
+                </div>
+                <div class="row pknu-modal-row">
+                    <div class="col-md-3"><label for="dailyprod" class="pt-2" style="font-size:0.95rem;">일일평균생산량</label></div>
+                    <div class="col-lg-6" >
+                         <input class="form-control text-center" type="text" name="dailyprod" id="dailyprod" />
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" id="htfooter">
+                <button type="button" class="d-none d-sm-inline-block btn btn-sm btn-danger shadow-sm" data-dismiss="modal">
+                    <i class="far fa-window-close fa-sm text-white-50"></i> 취소
+                </button>
+                <a href="#" id="editBtn" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
+                    <i class="far fa-paper-plane fa-sm text-white-50"></i> 수정
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- 관리 Modal END -->
 
 <!-- Scroll to Top Button-->
 <a class="scroll-to-top rounded" href="#page-top">
@@ -104,7 +151,7 @@ $(function(){
           text: ''
         }).then(function(){
             $.ajax({
-                url: "{% url 'delete' %}",
+                url: "{% url 'company:delete' %}",
                 data : JSON.stringify(selectdata),
                 type:'json',
                 contentType: 'application/json',
@@ -119,6 +166,7 @@ $(function(){
         });
         return false;
     });
+
 });
 </script>
 {% endblock %}

@@ -120,7 +120,7 @@ $(function(){
                 obj.end_month = end_month;
 
                 $.ajax({
-                    url: "{% url 'schedule.monthly_confirmed_order' %}",
+                    url: "{% url 'schedule:schedule.monthly_confirmed_order' %}",
                     method:'GET',
                     dataType: 'json',
                     contentType: 'application/json',

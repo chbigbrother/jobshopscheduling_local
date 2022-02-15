@@ -166,7 +166,7 @@
                     }
                 }
                 $.ajax({
-                    url: "{% url 'fixed_order' %}",
+                    url: "{% url 'schedule:fixed_order' %}",
                     method: 'POST',
                     dataType: "json",
                     contentType: "application/x-www-form-urlencoded; charset=UTF-8",
@@ -200,7 +200,7 @@
                     sch.push($('.sch_id').eq(i).val());
                 }
                 $.ajax({
-                    url: "{% url 'delete_order' %}",
+                    url: "{% url 'schedule:delete_order' %}",
                     method: 'POST',
                     dataType: "json",
                     contentType: "application/x-www-form-urlencoded; charset=UTF-8",
@@ -251,7 +251,7 @@
         obj.work_str_date = $('#strDate').val();
         obj.work_exp_date = $('#estDate').val();
         $.ajax({
-            url: "{% url 'generate_data' %}",
+            url: "{% url 'schedule:generate_data' %}",
             data: JSON.stringify(obj),
             type: 'json',
             contentType: 'application/json',
@@ -326,7 +326,7 @@
             obj.dateFrom = from;
             obj.dateTo = to;
             $.ajax({
-                url: "{% url 'order.order_list_search' %}",
+                url: "{% url 'order:order.order_list_search' %}",
                 method: 'GET',
                 dataType: 'json',
                 async: false,
@@ -407,7 +407,7 @@
             var obj = new Object();
             obj.strDate = $("#strDate").val();
             $.ajax({
-                url: "{% url 'company.comp_avail_facility' %}",
+                url: "{% url 'company:company.comp_avail_facility' %}",
                 method: 'GET',
                 dataType: 'json',
                 async: false,
@@ -473,13 +473,14 @@
         var enddate;
         let date = new Date();
         $.ajax({
-            url: "{% url 'draw_graph' %}",
+            url: "{% url 'schedule:draw_graph' %}",
             method: 'GET',
             dataType: 'json',
             contentType: 'application/json',
             processData: false,
             success: function(result) {
                 var dataset = new Array();
+                console.log(result);
                 var x_min = result[0].work_str_date;
                 var y_min = result[0].y_axis_1;
                 enddate = new Date(result[0].work_end_date);
@@ -487,6 +488,7 @@
                     var xmin = new Date(result[0].work_str_date);
                     var x_axis_1 = new Date(xmin.setDate(xmin.getDate() + result[i].x_axis_1));
                     var x_axis_2 = result[i].x_axis_2 - result[i].x_axis_1;
+                    if (y_min > result[i].y_axis_1) {y_min = result[i].y_axis_1;}
                     if (xmax < result[i].x_axis_2) {xmax = result[i].x_axis_2;}
                     if (ymax < result[i].y_axis_1) {ymax = result[i].y_axis_1;}
                     dataset.push({
@@ -525,7 +527,7 @@
                                 borderWidth: 1,
                                 borderColor: "red",
                                 label: {
-                                    content: "작업완료기한 : " + (enddate.getMonth() + 1) + "월" + enddate.getDate() + "일",
+                                    content: "work deadline : " + (enddate.getMonth() + 1) + "/" + enddate.getDate() + "",
                                     enabled: true,
                                     position: "top",
                                     backgroundColor: "rgba(160,170,174,100)",
@@ -565,7 +567,7 @@
                                 position: 'bottom',
                                 scaleLabel: {
                                     display: true,
-                                    labelString: '날짜'
+                                    labelString: 'dates'// '날짜'
                                 },
                                 // ticks: {
                                 time: {
@@ -587,7 +589,7 @@
                                 },
                                 scaleLabel: {
                                     display: true,
-                                    labelString: '기계 번호'
+                                    labelString: 'machine number' // '기계 번호'
                                 },
                                 ticks: {
                                     beginAtZero: true,
@@ -611,14 +613,14 @@
         });
 
         $.ajax({
-            url: "{% url 'available_comp' %}",
+            url: "{% url 'schedule:available_comp' %}",
             method: 'GET',
             dataType: 'json',
             contentType: 'application/json',
             processData: false,
             success: function(result) {
                 $.ajax({
-                    url: "{% url 'confirmed_order' %}",
+                    url: "{% url 'schedule:confirmed_order' %}",
                     method: 'GET',
                     dataType: 'json',
                     contentType: 'application/json',
@@ -717,7 +719,7 @@
         // ******************************************************************************************************* //
         // schedule_history
         $.ajax({
-            url: "{% url 'schedule_history' %}",
+            url: "{% url 'schedule:schedule_history' %}",
             method: 'GET',
             dataType: 'json',
             contentType: 'application/json',
@@ -769,7 +771,7 @@
         function doSearch(dateFrom, dateTo) {
             $.when(
                 $.ajax({
-                    url: "{% url 'schedule_history' %}"
+                    url: "{% url 'schedule:schedule_history' %}"
                 })
             ).then(function(_data) {
                 for (var idx in _data) {

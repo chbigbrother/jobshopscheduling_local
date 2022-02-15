@@ -3,7 +3,7 @@
 from django.urls import path
 
 from .views import *
-
+app_name = 'schedule'
 urlpatterns = [
     path('', home, name='schedule.index'),
     path('history/', history, name='schedule.history'),

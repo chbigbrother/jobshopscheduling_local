@@ -9,32 +9,33 @@
 <!-- Page Heading -->
 <div class="row">
     <div class="col-lg-12">
-            <div class="panel panel-default">
-                <div class="panel-body">
-                    <div class="d-sm-flex align-items-center mb-4">
-                        <!--<h1 class="h3 mb-0 text-gray-800">작업스케쥴링</h1>-->
-                        <input type="hidden" id="group_id" value="{{ user.groups.all.0.id }}">
-                        <input type="hidden" id="group_name" value="{{ user.groups.all.0.name }}">
-                        <input type="hidden" id="user_name" value="{{ user.username }}">
-                        <input type="hidden" id="user_id" value="{{ user.id }}">
-                        <div class="col-auto pknu-searchDate">
-                            <div class="col-lg-2 col-md-3 pknu-searchDate-dd">
-                                <label>주문일자</label>
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <input type="hidden" id="group_id" value="{{ user.groups.all.0.id }}">
+                <input type="hidden" id="group_name" value="{{ user.groups.all.0.name }}">
+                <input type="hidden" id="user_name" value="{{ user.username }}">
+                <input type="hidden" id="user_id" value="{{ user.id }}">
+                <form method="get" action="{% url 'home' %}">
+                    <div class="pknu-table-responsive">
+                        <div class="col-lg-12 col-md-4 pknu-searchDate-card">
+                            <div class="col-lg-1 col-md-3 pknu-searchDate-dd">
+                                <label>주문 일자</label>
                             </div>
-                            <div class="col-lg-3 col-md-4 pknu-searchDate-dd" >
+                            <div class="col-lg-2 col-md-4 pknu-searchDate-dd" >
                                  <input class="form-control text-center" type="text" name="dateFrom" id="dateFrom" value="{{ dateFrom }}"/>
                             </div>
                             <div class="col-lg-1 col-md-1 pknu-searchDate-dd">~</div>
-                            <div class="col-lg-3 col-md-4 pknu-searchDate-dd" style="margin-right:0.4rem;">
-                                <input class="form-control text-center" type="text" name="dateTo" id="dateTo" />
+                            <div class="col-lg-2 col-md-4 pknu-searchDate-dd" style="margin-right:0.4rem;">
+                                <input class="form-control text-center" type="text" name="dateTo" id="dateTo" value="{{ dateTo }}"/>
                             </div>
                             <div class="col-pos-right">
-                                <a id="searchBtn" href="#" class="d-sm-inline-block btn btn-sm btn-primary shadow-sm"><i class="fas fa-search mr-1"></i>검색</a>
+                                <button id="searchBtn" href="#" class="d-sm-inline-block btn btn-sm btn-primary shadow-sm"><i class="fas fa-search mr-1"></i>검색</button>
                             </div>
                         </div>
                     </div>
-                </div>
+                </form>
             </div>
+        </div>
     </div>
 </div>
 <div class="row data-row" id="row">
@@ -64,7 +65,8 @@
                    enableTime: false,
                    dateFormat: "Y-m-d",
                    disableMobile: true,
-                   defaultDate: [today.format('YYYY-MM-DD')]
+                   defaultDate: $('#dateTo').val()
+                   // defaultDate: [today.format('YYYY-MM-DD')]
             });
             flatpickr("#dateFrom", {
                    locale: Flatpickr.l10ns.ko,
@@ -82,7 +84,7 @@
                 obj.userName = $('#user_name').val();
                 obj.userId = $('#user_id').val();
                 $.ajax({
-                    url: "{% url 'fixed' %}",
+                    url: "{% url 'order:fixed' %}",
                     method:'GET',
                     processData: false,
                     type:'json',
@@ -113,15 +115,13 @@
                                         if (Array.isArray(data[i]) && typeof data[i][j] != 'undefined') {
                                             // 회사 여러개인 주문이 여러개 일 때,
                                             if (data[data.length-2].length > 1){
-                                                if (Array.isArray(data[i][j])){
-                                                    var data_list = data[i][j];
-                                                    var order_list = '';
-                                                    for(var k=0; k<data_list.length; k++){
-                                                        var data_2 = data_list[k];
-                                                        var color = k + 1;
-                                                        if(k==0 && j==0){
-                                                            name = data_list[k].order_id;
-                                                            innerHTML = '<div class="col-lg-12" style="height:100%;">' +
+                                                if (Array.isArray(data[i])){
+                                                    for(var f=0; f<data[i].length; f++){
+                                                    console.log(data[i]);
+                                                        var data_2 = data[i][f];
+                                                        var color = f;
+                                                        if (typeof data_2.cust_name != 'undefined' && grp_name != 'admin') {
+                                                            innerHTML += '<div class="col-lg-12" style="height:100%;">' +
                                                                         '<div class="card mb-2 py-1 border-bottom-primary" >' +
                                                                             '<div class="card-body multiple-items-parent ' + data_2.order_id + '" style="height: 12rem;">' +
                                                                                 '<div class="card border-left-primary shadow h-100 py-2">' +
@@ -147,41 +147,11 @@
                                                                                             '<div class="h6 mb-0 font-weight-bold text-gray-800">수량 :' + data_2.amount + 'yd</div>' +
                                                                                         '</div>' +
                                                                                     '</div>';
-                                                        }
-                                                        if(k==0 && j!=0){
-                                                            name = data_list[k].order_id;
-                                                            innerplusHTML += '<div class="col-lg-12" style="height:100%;" >' +
-                                                                        '<div class="card mb-2 py-1 border-bottom-primary" >' +
-                                                                            '<div class="card-body multiple-items-parent ' + data_2.order_id + '" style="height: 12rem;">' +
-                                                                                '<div class="card border-left-primary shadow h-100 py-2">' +
-                                                                                    '<div class="card-body">' +
-                                                                                        '<div class="row no-gutters align-items-center">' +
-                                                                                            '<div class="col mr-2">' +
-                                                                                                '<div class="text-xs font-weight-bold text-primary text-uppercase mb-1">' +
-                                                                                                    dateformat(data_2.sch_date) + '</div>' +
-                                                                                                '<div class="h5 mb-0 font-weight-bold text-gray-800">주문자 :' + data_2.cust_name + '</div>' +
-                                                                                                '<div class="h6 mb-0 font-weight-bold text-gray-800">기한 :' + dateformat(data_2.exp_date) + '</div>' +
-                                                                                            '</div>' +
-                                                                                            '<div class="col-auto">' +
-                                                                                                '<i class="fas fa-calendar fa-2x text-gray-300"></i>' +
-                                                                                            '</div>' +
-                                                                                        '</div>' +
-                                                                                    '</div>' +
-                                                                                '</div>' +
-                                                                                '<div class="card-body" style="display:inline-block; margin-top:-1.4rem;" >'+
-                                                                                    '<div class="card mb-4 py-3 border-left border-left-secondary">' +
-                                                                                        '<div class="card-body">' +
-                                                                                            // '<div class="h5 mb-0 font-weight-bold text-gray-800">' + type + '/' + data_2.textile_name + '</div>' +
-                                                                                            '<div class="h6 mb-0 font-weight-bold text-gray-800">오더번호 : ' + data_2.order_id + '</div>' +
-                                                                                            '<div class="h6 mb-0 font-weight-bold text-gray-800">수량 :' + data_2.amount + 'yd</div>' +
-                                                                                        '</div>' +
-                                                                                    '</div>';
-                                                        }
-                                                        inner.innerHTML +=
-                                                                            '<div class="card mb-4 py-3 border-left multiple-items-plus ' + name + ' border-left-' + colors[color] + '">' +
+                                                            innerHTML +=
+                                                                            '<div class="card mb-4 py-3 border-left multiple-items-plus ' + name + ' border-left-' + colors[j] + '">' +
                                                                                 '<div class="card-body">' +
                                                                                     '<div class="col-lg-12 mb-4">' +
-                                                                                        '<div class="card bg-' + colors[color] + ' text-white shadow">' +
+                                                                                        '<div class="card bg-' + colors[j] + ' text-white shadow">' +
                                                                                             '<div class="card-body">' +
                                                                                                 data_2.comp_name +
                                                                                                 '<div class="text-white-50 small">작업 가능</div>' +
@@ -197,8 +167,11 @@
                                                                 '<a href="#" class="edit_ {% if user.groups.all.0.name == 'customer' %} none {% endif %} "><i class="far fa-edit "></i></a>'+
                                                                 '<a href="#" class="delete_ {% if user.groups.all.0.name == 'customer' %} none {% endif %} " style="margin-left:10px; z-index:1000;"><i class="fas fa-trash-alt"></i></a>' +
                                                              '</div>';
+                                                        }
+
+
                                                     }
-                                                }
+                                                };
                                             } else {
                                                 for(var k=0; k<data[i][j].length; k++) {
                                                     if(typeof data[i][j][k].sch_date != 'undefined') {
@@ -253,12 +226,10 @@
                                                              '</div>';
                                                     }
                                                 }
-
                                             }
-
                                         }
                                         // ** ***** 한 업체에 오더 여러개 설정 되었을 때, ************************** **
-                                        if(data.length >2 && data[i].comp_name == data[data.length-1][j] && grp_name != 'customer'){
+                                        if(data.length > 2 && data[i].comp_name == data[data.length-1][j] && grp_name != 'customer'){
                                             innerHTML += '<div class="col-lg-12" style="height:100%;">' +
                                                         '<div class="card mb-2 py-1 border-bottom-primary" >' +
                                                             '<div class="card-body ' + data[i].cust_name + '" style="height: 12rem;">' +
@@ -304,9 +275,10 @@
                                                         '<a href="#" class="delete_ {% if user.groups.all.0.name == 'customer' %} none {% endif %} " style="margin-left:10px; z-index:1000;"><i class="fas fa-trash-alt"></i></a>'+
                                                      '</div>';
                                         }
+
                                         // ** ***** 한 고객의 하나의 오더가 여러 회사에서 가능할 때, ************************** **
-                                        if (data.length >2 && data[i].comp_name == data[data.length-1][j] && grp_name == 'customer') {
-                                            // console.log("yoyo");
+                                        var orderId = data[i].order_id;
+                                        if (data.length>2 && data[i].comp_name == data[data.length-1][j] && data[data.length-1].length > 1 && grp_name == 'customer') {
                                             name = data[i].order_id;
                                             innerplusHTML += '<div class="col-lg-12" style="height:100%;">' +
                                                             '<div class="card mb-2 py-1 border-bottom-primary" >' +
@@ -334,7 +306,6 @@
                                                                                 '<div class="h6 mb-0 font-weight-bold text-gray-800">수량 :' + data[i].amount + 'yd</div>' +
                                                                             '</div>' +
                                                                         '</div>';
-
                                             innerHTML +=
                                                                 '<div class="card mb-4 py-3 border-left border-left-' + colors[j] + '">' +
                                                                     '<div class="card-body">' +
@@ -355,6 +326,54 @@
                                                     '<a href="#" class="edit_ {% if user.groups.all.0.name == 'customer' %} none {% endif %} "><i class="far fa-edit "></i></a>'+
                                                     '<a href="#" class="delete_ {% if user.groups.all.0.name == 'customer' %} none {% endif %} " style="margin-left:10px; z-index:1000;"><i class="fas fa-trash-alt"></i></a>' +
                                                  '</div>';
+                                        }
+                                        // ** ***** 한 고객의 여러 오더가 한 회사에서만 가능할 때, ************************** **
+                                        if (data.length>2 && data[i].comp_name == data[data.length-1][j] && data[data.length-1].length == 1 && grp_name == 'customer') {
+                                            name = data[i].order_id;
+                                            innerHTML += '<div class="col-lg-12" style="height:100%;">' +
+                                                        '<div class="card mb-2 py-1 border-bottom-primary" >' +
+                                                            '<div class="card-body ' + data[i].cust_name + '" style="height: 12rem;">' +
+                                                                '<div class="card border-left-primary shadow h-100 py-2">' +
+                                                                    '<div class="card-body">' +
+                                                                        '<div class="row no-gutters align-items-center">' +
+                                                                            '<div class="col mr-2">' +
+                                                                                '<div class="text-xs font-weight-bold text-primary text-uppercase mb-1">' +
+                                                                                    dateformat(data[i].sch_date) + '</div>' +
+                                                                                '<div class="h5 mb-0 font-weight-bold text-gray-800">주문자 :' + data[i].cust_name + '</div>' +
+                                                                                '<div class="h6 mb-0 font-weight-bold text-gray-800">기한 :' + dateformat(data[i].exp_date) + '</div>' +
+                                                                            '</div>' +
+                                                                            '<div class="col-auto">' +
+                                                                                '<i class="fas fa-calendar fa-2x text-gray-300"></i>' +
+                                                                            '</div>' +
+                                                                        '</div>' +
+                                                                    '</div>' +
+                                                                '</div>' +
+
+                                                                '<div class="card mb-4 py-3 border-left border-left-secondary">' +
+                                                                    '<div class="card-body">' +
+                                                                        // '<div class="h5 mb-0 font-weight-bold text-gray-800">' + type + '/' + data[i].textile_name + '</div>' +
+                                                                        '<div class="h6 mb-0 font-weight-bold text-gray-800">오더번호 : ' + data[i].order_id + '</div>' +
+                                                                        '<div class="h6 mb-0 font-weight-bold text-gray-800">수량 :' + data[i].amount + 'yd</div>' +
+                                                                    '</div>' +
+                                                                '</div>' +
+                                                                '<div class="card mb-4 py-3 border-left border-left-' + colors[j] + '">' +
+                                                                    '<div class="card-body">' +
+                                                                        '<div class="col-lg-12 mb-4">' +
+                                                                            '<div class="card bg-' + colors[j] + ' text-white shadow">' +
+                                                                                '<div class="card-body">' +
+                                                                                    data[i].comp_name +
+                                                                                    '<div class="text-white-50 small">작업 가능</div>' +
+                                                                                '</div>' +
+                                                                            '</div>' +
+                                                                        '</div>' +
+                                                                    '</div>' +
+                                                                '</div>' +
+
+                                                            '</div>' +
+                                                        '</div>' +
+                                                        '<a href="#" class="edit_ {% if user.groups.all.0.name == 'customer' %} none {% endif %} "><i class="far fa-edit "></i></a>'+
+                                                        '<a href="#" class="delete_ {% if user.groups.all.0.name == 'customer' %} none {% endif %} " style="margin-left:10px; z-index:1000;"><i class="fas fa-trash-alt"></i></a>'+
+                                                     '</div>';
                                         }
                                         // ** ***** 한 업체에 오더 한개 설정 되었을 때, ************************** **
                                         if(data.length == 2 && data[data.length-1][j]){
@@ -422,6 +441,7 @@
                                         $('.multiple-items-plus').each(function(j){
                                             var child = $('.multiple-items-plus')[j].classList[5];
                                             if (parent == child) {
+                                                // $('.multiple-items-parent')[j].innerHTML(inner);
                                                 $('.multiple-items-parent')[i].append($('.multiple-items-plus')[j]);
                                             }
                                         })

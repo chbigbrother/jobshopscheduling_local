@@ -24,7 +24,7 @@
                     <span class="text">.csv 업로드</span>
                 </a>
             </div>
-            <form id="orderForm" method="POST" action="{% url 'csvCreate' %}">
+            <form id="orderForm" method="POST" action="{% url 'company:csvCreate' %}">
                 <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
                     <thead>
                         <tr>
@@ -111,7 +111,7 @@
             <!--modal body-->
             <!--modal footer-->
             <div class="modal-footer">
-                <a href="{% url 'company.comp_csv_download_blank' %}" class="btn btn-info btn-icon-split upload-btn">
+                <a href="{% url 'company:company.comp_csv_download_blank' %}" class="btn btn-info btn-icon-split upload-btn">
                     <span class="icon text-white-50">
                         <i class="fas fa-check"></i>
                     </span>
@@ -143,12 +143,12 @@
         $(".dropdown-btn").css('display', 'none');
 
         // csv 업로드
-        var _url = "{% url 'company.comp_read_csv' %}";
+        var _url = "{% url 'company:company.comp_read_csv' %}";
 
         var formData = new FormData();
         //dropzone에 파일등록
         var dropzone = new Dropzone("#compDocDropzone", {
-            url: "{% url 'upload' %}",
+            url: "{% url 'company:upload' %}",
             addRemoveLinks: true,
             maxFiles: 1,
             init: function(e) {
@@ -186,13 +186,13 @@
             obj.comp_name = $('#compname').val();
 
             $.ajax({
-                url: "{% url 'company.comp_update_modal' %}",
+                url: "{% url 'company:company.comp_update_modal' %}",
                 data : JSON.stringify(obj),
                 type:'json',
                 contentType: 'application/json',
                 method: "POST",
                 success: function(data){
-                    $(location).attr('href', "{% url 'company.list' %}")
+                    $(location).attr('href', "{% url 'company:company.list' %}")
                 }
             })
         });
@@ -239,7 +239,7 @@
             });
         });
 
-        $('#form').attr('action',"{% url 'order.csvCreate' %}").submit();
+        $('#form').attr('action',"{% url 'order:order.csvCreate' %}").submit();
     });
     function deletedOrder(name, amount){
         var selectdata = new Object();
@@ -253,7 +253,7 @@
           text: ''
         }).then(function(){
             $.ajax({
-                url: "{% url 'order.order_delete_read_csv' %}",
+                url: "{% url 'order:order.order_delete_read_csv' %}",
                 data : JSON.stringify(selectdata),
                 type:'json',
                 contentType: 'application/json',

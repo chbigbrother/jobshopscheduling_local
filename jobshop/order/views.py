@@ -118,7 +118,7 @@ def order_list_edit(request):
 
     product = OrderList.objects.get(order_id=order_id)
     product.cust_name = cust_name
-    product.prod_id = Product.objects.get(prod_name=prod_name[0])
+    product.prod_id = Product.objects.get(prod_name=prod_name)
     product.amount = amount
     product.exp_date = exp_date.replace('-', '').replace('-', '')
     product.contact = contact
@@ -257,6 +257,7 @@ def fixed_order(request):
     # if len(request.user.groups.values('id')) == 0: # 회사
     if group_name != 'admin' and group_name != 'customer':
         result = OrderSchedule.objects.filter(sch_id__work_str_date__gte=date_from, sch_id__work_str_date__lte=date_to,sch_id__comp_id=group_id)
+
         if len(result) > 0:
             for q in result:
                 if q.use_yn == 'Y':

@@ -7,11 +7,11 @@
     <div class="col-lg-12">
         <div class="panel panel-default">
             <div class="panel-body">
-                <form method="get" action="{% url 'company.facility' %}">
+                <form method="get" action="{% url 'company:company.facility' %}">
                     <div class="pknu-table-responsive">
                         <div class="col-lg-12 col-md-4 pknu-searchDate-card">
                             <div class="col-lg-1 col-md-3 pknu-searchDate-dd">
-                                <label>주문일자</label>
+                                <label>작업일자</label>
                             </div>
                             <div class="col-lg-2 col-md-4 pknu-searchDate-dd" >
                                  <input class="form-control text-center" type="text" name="dateFrom" id="dateFrom" value="{{ dateFrom }}"/>
@@ -34,7 +34,7 @@
     <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
         <h6 class="m-0 font-weight-bold text-primary">조회</h6>
         <div class="dropdown no-arrow" >
-            <a href="{% url 'company.comp_production_csv_download' %}" class="btn btn-success btn-icon-split">
+            <a href="{% url 'company:company.comp_production_csv_download' %}" class="btn btn-success btn-icon-split">
                 <span class="icon text-white-50">
                     <i class="fas fa-check"></i>
                 </span>
@@ -58,7 +58,7 @@
                             <th>생산량(yd)</th>
                             <th>등록일시</th>
                             <th>수정일시</th>
-                            <th style="text-align:center;">관리</th>
+                            <!--<th style="text-align:center;">관리</th>-->
                         </tr>
                     </thead>
                     <tbody>
@@ -74,10 +74,10 @@
                             <td>{{comp.amount}}</td>
                             <td>{{comp.created_at}}</td>
                             <td>{{comp.modified_at}}</td>
-                            <td style="text-align:center;">
+                            <!--<td style="text-align:center;">
                                 <a href="" id="edit_{{ comp.id }}"><i class="far fa-edit {{ comp.id }}"></i></a>
                                 <a href="" id="delete_{{ comp.id }}" style="margin-left:10px;"><i class="fas fa-trash-alt"></i></a>
-                            </td>
+                            </td>-->
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -138,7 +138,7 @@
               text: ''
             }).then(function(){
                 $.ajax({
-                    url: "{% url 'delete' %}",
+                    url: "{% url 'company:delete' %}",
                     data : JSON.stringify(selectdata),
                     type:'json',
                     contentType: 'application/json',

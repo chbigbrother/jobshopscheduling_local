@@ -89,7 +89,7 @@
         var ymax = 0;
         var enddate;
         $.ajax({
-            url: "{% url 'draw_history_chart' %}",
+            url: "{% url 'schedule:draw_history_chart' %}",
             method:'GET',
             dataType: 'json',
             contentType: 'application/json',
@@ -284,7 +284,7 @@
 
         function doSearch(dateFrom, dateTo){
             $.when(
-               $.ajax({url: "{% url 'schedule_history' %}"})
+               $.ajax({url: "{% url 'schedule:schedule_history' %}"})
             ).then(function(_data){
                 for(var idx in _data){
                     console.log(_data);

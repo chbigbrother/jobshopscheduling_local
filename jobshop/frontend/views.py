@@ -5,14 +5,29 @@ from datetime import timedelta
 
 # Create your views here.
 def index(request):
-    date = datetime.datetime.today() - timedelta(days=3)
-    date = {
-        'dateFrom': date.strftime("%Y-%m-%d"),
-        'path': '주문관리',
-        'selected' : 'ordermanagement'
-    }
-    return render(request, 'main/index.html', date)
+    template_name = 'main/index.html'
 
+    dateFrom, dateTo = get_dates(request)
+
+    context = {
+        'dateFrom': dateFrom,
+        'dateTo': dateTo,
+        'path': '주문관리',
+        'selected': 'ordermanagement'
+    }
+    return render(request, template_name, context)
+
+def get_dates(request):
+    date = datetime.datetime.today() - timedelta(days=3)
+
+    if 'dateFrom' in request.GET:
+        date_from = datetime.datetime.strptime(request.GET['dateFrom'], "%Y-%m-%d")
+        date_to = datetime.datetime.strptime(request.GET['dateTo'], "%Y-%m-%d")
+    else:
+        date_from = date
+        date_to = datetime.datetime.today()
+
+    return date_from.strftime("%Y-%m-%d"), date_to.strftime("%Y-%m-%d")
 # board
 def board(request):
     return render(request, 'main/board.html')
