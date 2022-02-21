@@ -238,7 +238,7 @@ def comp_product_regist(request):
     date = {
         "comp_list": comp_list,
         'dateFrom': date.strftime("%Y-%m-%d"),
-        'path': '업체정보 / 제품정보등록'
+        'path': '제품정보 / 제품정보등록'
     }
 
     return render(request, template_name, date)
@@ -256,7 +256,7 @@ def comp_product_view(request):
     date = {
         "comp_list": comp_list,
         'dateFrom': date.strftime("%Y-%m-%d"),
-        'path': '업체정보 / 제품정보검색'
+        'path': '제품정보 / 제품정보검색'
     }
     return render(request, template_name, date)
 
