@@ -1,9 +1,11 @@
 from django.db import models
 
+
 # Create your models here.
 class Information(models.Model):
     comp_id = models.IntegerField(primary_key=True)  # 작업호기
     comp_name = models.CharField(max_length=150, null=False)  # 제품명
+    credibility = models.FloatField(null=True)  # 신뢰도
     class Meta:
         verbose_name_plural = '회사정보등록'
 
@@ -35,11 +37,13 @@ class Schedule(models.Model):
     modified_at = models.DateTimeField(auto_now=True)
 
 class Product(models.Model):
-    prod_id = models.CharField(max_length=120, primary_key=True)
+    idx = models.AutoField(primary_key=True)
+    prod_id = models.CharField(max_length=120)
     comp_id = models.ForeignKey("Information", related_name="company", on_delete=models.CASCADE, db_column="comp_id")
     prod_name = models.CharField(max_length=120)
     density = models.FloatField(null=False) # 밀도
     rpm = models.FloatField(null=False)
     daily_prod_rate = models.FloatField(null=False)
+    cost = models.FloatField(null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)

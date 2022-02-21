@@ -345,7 +345,7 @@
             $('#selectOrder').html('');
             var result = orderSearch($('#ordDateFrom').val(), $('#ordDateTo').val());
             if (result.length > 0) {
-                var innerHTML = '<select class="form-control" name="select" multiple="multiple" id="selectOrder" style="width:100%;">';
+                var innerHTML = '<select class="form-control" name="select" multiple="multiple" id="selectOrder" style="width:18.85rem;">';
                 for (var i = 0; i < result.length; i++) {
                     if (typeof result[i] !== 'undefined') {
                         innerHTML += '<option class="' + result[i].amount + "_" + result[i].avail_fac_cnt + '" value="' + result[i].prod_name + '">' + result[i].prod_name + ' 수량: ' + result[i].amount + ' yd</option>';

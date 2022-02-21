@@ -570,26 +570,45 @@ def fixed_list(request):
 
 # 처리 가능 오더 확정
 def fixed_order(request):
-    orders = request.POST.getlist('order_list[]')
-    if len(fixed_list(request)) > 0:
-        result = fixed_list(request)
-        for sch in result:
-            OrderSchedule.objects.filter(sch_id=sch).update(use_yn='N')
+    
+    if request.method == 'POST':
+        request = json.loads(request.body)
 
-    # 오더 아이디로 넘어옴
-    for ord in orders:
-        orders = Schedule.objects.filter(sch_id=ord)  # order_id 나중에 order_list 에서 조회해 오기
-        if not orders:
-            OrderSchedule.objects.filter(sch_id=ord).update(use_yn='Y')
-        else:
-            for i in orders:
-                order_ids = OrderList.objects.filter(prod_id=i.prod_id)
-                for j in order_ids:
-                    OrderSchedule.objects.update_or_create(
-                        order_id=OrderList.objects.get(order_id=j.order_id),
-                        sch_id=Schedule.objects.get(sch_id=i.sch_id),
-                        use_yn='Y'
-                    )
+    if request['type'] == 'customer':
+        comp_name = request['comp_name']    # 회사명
+        order_id = request['order_id']  # 오더 아이디
+        order_ids = OrderSchedule.objects.filter(order_id=order_id)
+        for j in order_ids:
+            print(j)
+            OrderSchedule.objects.update_or_create(
+                order_id=j.order_id,
+                sch_id=j.sch_id,
+                use_yn='Y'
+            )
+    else:
+        orders = request.POST.getlist('order_list[]')
+
+        if len(fixed_list(request)) > 0:
+            result = fixed_list(request)
+            for sch in result:
+                OrderSchedule.objects.filter(sch_id=sch).update(use_yn='N')
+
+        # 오더 아이디로 넘어옴
+        for ord in orders:
+            orders = Schedule.objects.filter(sch_id=ord)  # order_id 나중에 order_list 에서 조회해 오기
+            if not orders: # 최초 수락일 때,
+                # OrderSchedule.objects.filter(sch_id=ord).update(use_yn='Y')
+                OrderSchedule.objects.filter(sch_id=ord).update(use_yn='N')
+            else: # 최초 수락이 아닐 때,
+                for i in orders:
+                    order_ids = OrderList.objects.filter(prod_id=i.prod_id)
+                    for j in order_ids:
+                        OrderSchedule.objects.update_or_create(
+                            order_id=OrderList.objects.get(order_id=j.order_id),
+                            sch_id=Schedule.objects.get(sch_id=i.sch_id),
+                            # use_yn='Y'
+                            use_yn='N'
+                        )
 
     return JsonResponse({"message": 'success'})
 

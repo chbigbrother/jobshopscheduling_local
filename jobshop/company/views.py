@@ -151,14 +151,14 @@ def comp_production_search(request):
         date_to = request.GET['dateTo'].replace('-', '')
 
         order_list = OrderSchedule.objects.filter(sch_id__work_str_date__gte=date_from).filter(
-            sch_id__work_str_date__lte=date_to).filter(sch_id__comp_id=request.user.groups.values('id')[0]['id'])
+            sch_id__work_str_date__lte=date_to).filter(sch_id__comp_id=request.user.groups.values('id')[0]['id']).filter(use_yn='Y')
 
     else:
         sch_date_from = date
         sch_date_to = datetime.datetime.today()
         order_list = OrderSchedule.objects.filter(sch_id__work_str_date__gte=date.strftime("%Y%m%d"),
                                                   sch_id__work_str_date__lte=datetime.datetime.today().strftime(
-                                                      "%Y%m%d")).filter(sch_id__comp_id=request.user.groups.values('id')[0]['id'])
+                                                      "%Y%m%d")).filter(sch_id__comp_id=request.user.groups.values('id')[0]['id']).filter(use_yn='Y')
     #####################################################################
     using_facility_list = []
 
@@ -187,7 +187,9 @@ def comp_production_search(request):
     for ord in range(len(order_list.values())):
         for i in using_facility_list:
             for j in i:
-                if order_list[ord].order_id.prod_id.prod_id == j.prod_id:
+                if order_list[ord].order_id.prod_id == j.prod_id:
+                    prod_name = Product.objects.filter(prod_id=j.prod_id)[0]
+                    prod_name = prod_name.prod_name
                     result = {}
                     result['comp_id'] = j.comp_id.comp_id
                     result['comp_name'] = j.comp_id.comp_name
@@ -195,7 +197,7 @@ def comp_production_search(request):
                     result['work_str_date'] = date_str(j.work_str_date)
                     result['work_end_date'] = date_str(j.work_end_date)
                     result['amount'] = order_list[ord].order_id.amount
-                    result['prod_name'] = order_list[ord].order_id.prod_id.prod_name
+                    result['prod_name'] = prod_name
                     result['exp_date'] = date_str(order_list[ord].order_id.exp_date)
                     result['created_at'] = j.created_at
                     result['modified_at'] = j.modified_at

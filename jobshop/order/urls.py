@@ -10,6 +10,7 @@ urlpatterns = [
     path('list/search/', order_list_search, name='order.order_list_search'),
     path('list/search/edit/', order_list_edit, name='order.order_list_edit'),
     path('list/search/delete/', order_list_delete, name='order.order_list_delete'),
+    path('avail/schedule/', avail_comps, name='avail_comps'),
     path('fixed/schedule/', fixed_order, name='fixed'),
     path('csv/download/blank/', order_csv_download_blank, name='order.order_csv_download_blank'),
     path('csv/read/', order_read_csv, name='order.order_read_csv'),

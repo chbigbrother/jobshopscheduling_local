@@ -12,9 +12,8 @@ from rest_framework import serializers
 from openpyxl import load_workbook
 from fileutils.forms import FileUploadCsv
 from fileutils.models import FileUploadCsv as fileUploadCsv
-from .models import OrderSchedule, OrderList
-from company.models import *
-from common.views import id_generate, date_str, date_remove
+from company.models import Schedule, Information, Product, Facility
+from common.views import id_generate, date_str, date_remove, money_count
 from company.views import Product
 from datetime import timedelta
 from .models import *
@@ -53,6 +52,7 @@ def order_list_query(request):
     group = request.user.groups.values_list('name', flat=True).first()
     group_id = request.user.groups.values_list('id', flat=True).first()
     user_name = request.user.first_name
+    result_list = []
 
     if group == 'customer':
         if 'dateFrom' in request.GET:
@@ -62,13 +62,13 @@ def order_list_query(request):
             date_from = request.GET['dateFrom'].replace('-', '')
             date_to = request.GET['dateTo'].replace('-', '')
 
-            order_list = OrderList.objects.filter(sch_date__gte=date_from).filter(sch_date__lte=date_to).filter(cust_name=user_name)
+            result_list = OrderList.objects.filter(sch_date__gte=date_from).filter(sch_date__lte=date_to).filter(cust_name=user_name)
         else:
             sch_date_from = date
             sch_date_to = datetime.datetime.today()
-            order_list = OrderList.objects.filter(sch_date__gte=date.strftime("%Y%m%d"),
+            result_list = OrderList.objects.filter(sch_date__gte=date.strftime("%Y%m%d"),
                                                   sch_date__lte=datetime.datetime.today().strftime("%Y%m%d")).filter(cust_name=user_name)
-    elif group == 'super':
+    elif group == 'admin':
         if 'dateFrom' in request.GET:
             sch_date_from = datetime.datetime.strptime(request.GET['dateFrom'], "%Y-%m-%d")
             sch_date_to = datetime.datetime.strptime(request.GET['dateTo'], "%Y-%m-%d")
@@ -76,11 +76,11 @@ def order_list_query(request):
             date_from = request.GET['dateFrom'].replace('-', '')
             date_to = request.GET['dateTo'].replace('-', '')
 
-            order_list = OrderList.objects.filter(sch_date__gte=date_from).filter(sch_date__lte=date_to)
+            result_list = OrderList.objects.filter(sch_date__gte=date_from).filter(sch_date__lte=date_to)
         else:
             sch_date_from = date
             sch_date_to = datetime.datetime.today()
-            order_list = OrderList.objects.filter(sch_date__gte=date.strftime("%Y%m%d"),
+            result_list = OrderList.objects.filter(sch_date__gte=date.strftime("%Y%m%d"),
                                                   sch_date__lte=datetime.datetime.today().strftime("%Y%m%d"))
     else:
         if 'dateFrom' in request.GET:
@@ -89,18 +89,52 @@ def order_list_query(request):
 
             date_from = request.GET['dateFrom'].replace('-', '')
             date_to = request.GET['dateTo'].replace('-', '')
+            order_list = OrderList.objects.filter(sch_date__gte=date_from).filter(sch_date__lte=date_to)
+                # .filter(prod_id__comp_id=group_id)
+            if len(order_list) > 0:
+                for i in order_list:
+                    product = Product.objects.filter(prod_id=i.prod_id, comp_id=group_id)
+                    if len(product) > 0:
+                        for j in product:
+                            if i.prod_id==j.prod_id:
+                                i.prod_id = j.prod_name
+                                result_list.append(i)
 
-            order_list = OrderList.objects.filter(sch_date__gte=date_from).filter(sch_date__lte=date_to).filter(prod_id__comp_id=group_id)
+
         else:
             sch_date_from = date
             sch_date_to = datetime.datetime.today()
             order_list = OrderList.objects.filter(sch_date__gte=date.strftime("%Y%m%d"),
-                                                  sch_date__lte=datetime.datetime.today().strftime("%Y%m%d")).filter(prod_id__comp_id=group_id)
-    for i in order_list:
+                                                  sch_date__lte=datetime.datetime.today().strftime("%Y%m%d"))
+                # .filter(prod_id__comp_id=group_id)
+            if len(order_list) > 0:
+                for i in order_list:
+                    product = Product.objects.filter(prod_id=i.prod_id, comp_id=group_id)
+                    if len(product) > 0:
+                        for j in product:
+                            if i.prod_id == j.prod_id:
+                                i.prod_id = j.prod_name
+                                result_list.append(i)
+    for i in result_list:
         i.exp_date = date_str(i.exp_date)
         i.sch_date = date_str(i.sch_date)
-
-    return sch_date_from.strftime("%Y-%m-%d"), sch_date_to.strftime("%Y-%m-%d"), order_list
+        fixed_status = OrderSchedule.objects.filter(order_id=i.order_id).order_by('-created_at')
+        waiting_list = OrderSchedule.objects.filter(order_id=i.order_id, use_yn="N").order_by('-created_at')
+        if len(fixed_status) > 1:
+            if fixed_status[0].use_yn == 'Y':
+                i.ord_status = 1
+            else:
+                i.ord_status = 0
+        if len(fixed_status) <= 1 and len(fixed_status) > 0:
+            if fixed_status[0].use_yn == 'Y':
+                i.ord_status = 1
+            else:
+                i.ord_status = 0
+        if len(fixed_status) == 0:
+            i.ord_status = 2
+        # if len(waiting_list) > 0:
+        #     i.ord_status = 0
+    return sch_date_from.strftime("%Y-%m-%d"), sch_date_to.strftime("%Y-%m-%d"), result_list # order_list
 
 # 수주관리검색 수정
 def order_list_edit(request):
@@ -158,7 +192,7 @@ def order_list_search(request):
             "GROUP BY prod_id")
         for i in order_list:
             product_dict = {}
-            product = Product.objects.get(prod_id=i.prod_id.prod_id)
+            product = Product.objects.get(prod_id=i.prod_id)
             # 필요 기계 대수 default 설정값 계산
             # (수량 / 일일생산량) / 2
             avail_fac_cnt = 0
@@ -262,13 +296,15 @@ def fixed_order(request):
             for q in result:
                 if q.use_yn == 'Y':
                     final_dict = {}
+                    prod_name = Product.objects.filter(prod_id=q.order_id.prod_id)[0]
+                    prod_name = prod_name.prod_name
                     final_dict['comp_name'] = q.sch_id.comp_id.comp_name  # 회사명
                     final_dict['order_id'] = q.order_id.order_id  # 오더번호
                     final_dict['amount'] = q.order_id.amount  # 오더수량
                     final_dict['cust_name'] = q.order_id.cust_name  # 고객명
                     final_dict['sch_date'] = q.order_id.sch_date  # 주문일자
                     final_dict['exp_date'] = q.order_id.exp_date  # 작업기한
-                    final_dict['textile_name'] = q.order_id.prod_id.prod_name  # 소재명
+                    final_dict['textile_name'] = prod_name  # 소재명
                     final_dict['amount'] = q.order_id.amount  # 주문수량
                     final_result.append(final_dict)
                 custlist = []
@@ -557,6 +593,41 @@ def order_update_modal(request):
             email=request['email'],
         )
     return redirect("/order/list/")
+
+def avail_comps(request):
+    for i in request.GET:
+        request = json.loads(i)
+
+    order_id = request['order_id']
+    date_from = request['date_from'].replace('-', '')
+    date_to = request['date_to'].replace('-', '')
+
+    result_list = []
+    data_list = OrderSchedule.objects.filter(sch_id__work_str_date__gte=date_from, sch_id__work_str_date__lte=date_to, use_yn="N", order_id=order_id)
+    order_list = OrderList.objects.get(order_id=order_id)
+
+    for i in data_list:
+        result_dict = {}
+        product_list = Product.objects.filter(prod_id=order_list.prod_id)[0]
+        cred = Information.objects.get(comp_id=product_list.comp_id_id)
+        exp_date = Schedule.objects.filter(sch_id=i.sch_id_id)
+        for j in exp_date:
+            result_dict['exp_date'] = j.work_end_date
+        result_dict['comp_name'] = cred.comp_name
+        result_dict['cost'] = money_count(product_list.cost)
+        result_dict['prod_name'] = product_list.prod_name
+        result_dict['order_id'] = i.order_id_id
+        result_dict['credibility'] = cred.credibility
+        result_list.append(result_dict)
+
+    def json_default(value):
+        if isinstance(value, datetime.date):
+            return value.strftime('%Y-%m-%d')
+        raise TypeError('not JSON serializable')
+
+    return HttpResponse(json.dumps(result_list, default=json_default, ensure_ascii=False),
+                        content_type="application/json")
+
 
 def order_test(request):
 

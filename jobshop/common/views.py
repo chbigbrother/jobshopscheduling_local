@@ -50,3 +50,14 @@ def calc_date_str(datefrom, dateto):
     date_diff = date_to - date_from
 
     return date_diff
+
+def money_count(data):
+    data = str(int(data))
+    cost = ''
+    count = 0
+    for i in range(len(data)):
+        count += 1;
+        cost += data[i]
+        if count % 3 == 2 and i is not len(data) - 1:
+            cost += ','
+    return cost
