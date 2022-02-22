@@ -11,7 +11,7 @@ from fileutils.forms import FileUploadCsv
 from fileutils.models import FileUploadCsv as fileUploadCsv
 from .models import *
 from order.models import *
-from common.views import id_generate, date_str, comma_str
+from common.views import id_generate, date_str, comma_str, money_count
 import pandas as pd
 import json, csv, datetime
 from urllib.parse import quote
@@ -34,7 +34,7 @@ def comp_list_view(request):
     template_name = 'company/comp_fac_list.html'
     date = datetime.datetime.today() - timedelta(days=3)
     comp_list = Facility.objects.filter(comp_id=request.user.groups.values('id')[0]['id'])
-
+    information = Information.objects.get(comp_id=request.user.groups.values('id')[0]['id'])
     result_list = []
     for i in range(len(comp_list.values())):
         # comp_name = Information.objects.get(comp_id=comp_list[i].comp_id)
@@ -43,6 +43,10 @@ def comp_list_view(request):
         result['comp_name'] = comp_name
         result['facility_name'] = comp_list[i].facility_name
         result['facility_id'] = comp_list[i].facility_id
+        result['credibility'] = information.credibility
+        result['address'] = information.address
+        result['contact'] = information.contact
+        result['email'] = information.email
         result_list.append(result)
 
     date = {
@@ -252,6 +256,8 @@ def comp_product_view(request):
         comp_list = Product.objects.all()
     else:
         comp_list = Product.objects.filter(comp_id=request.user.groups.values('id')[0]['id'])
+    for i in comp_list:
+        i.cost = money_count(i.cost)
     date = datetime.datetime.today() - timedelta(days=3)
     date = {
         "comp_list": comp_list,

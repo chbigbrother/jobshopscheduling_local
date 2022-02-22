@@ -25,8 +25,7 @@
                         <th>밀도</th>
                         <th>평균rpm</th>
                         <th>일일평균생산량</th>
-                        <th>생성일자</th>
-                        <th>수정일자</th>
+                        <th>가격(yd)</th>
                         <th class="{% if user.groups.all.0.name == 'customer' %} none {% endif %}" style="text-align:center;">관리</th>
                     </tr>
                 </thead>
@@ -38,8 +37,7 @@
                         <td>{{comp.density}}</td>
                         <td>{{comp.rpm}}</td>
                         <td>{{comp.daily_prod_rate}}</td>
-                        <td>{{comp.created_at}}</td>
-                        <td>{{comp.modified_at}}</td>
+                        <td>{{comp.cost}} 원</td>
                         <td class="{% if user.groups.all.0.name == 'customer' %} none {% endif %}" style="text-align:center;">
                             <div class="action-buttons">
                                 <a href="#"  id="edit_{{ comp.prod_id }}" class="btn btn-secondary light mr-2 editContBtn">
@@ -78,7 +76,7 @@
         <div class="modal-content">
             <div class="modal-header">
                     <h4 class="modal-title" id="exampleModalLabel">제품정보 관리</h4>
-                    <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                    <button class="close" type="button" data-bs-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">×</span>
                     </button>
                 </div>
@@ -107,9 +105,15 @@
                          <input class="form-control text-center" type="text" name="dailyprod" id="dailyprod" />
                     </div>
                 </div>
+                <div class="row pknu-modal-row">
+                    <div class="col-md-3"><label for="prodcost" class="pt-2" style="font-size:0.95rem;">가격 (yd)</label></div>
+                    <div class="col-lg-6" >
+                         <input class="form-control text-center" type="text" name="prodcost" id="prodcost" />
+                    </div>
+                </div>
             </div>
             <div class="modal-footer" id="htfooter">
-                <button type="button" class="d-none d-sm-inline-block btn btn-sm btn-danger shadow-sm" data-dismiss="modal">
+                <button type="button" class="d-none d-sm-inline-block btn btn-sm btn-danger shadow-sm" data-bs-dismiss="modal">
                     <i class="far fa-window-close fa-sm text-white-50"></i> 취소
                 </button>
                 <a href="#" id="editBtn" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">

@@ -54,7 +54,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h4 class="modal-title" id="exampleModalLabel">제품 정보 업로드</h4>
-                <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                <button class="close" type="button" data-bs-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">×</span>
                     </button>
             </div>
@@ -85,7 +85,7 @@
                 </div>
             </div>
             <div class="modal-footer" id="modal-footer">
-                <button type="button" class="d-none d-sm-inline-block btn btn-sm btn-danger shadow-sm" data-dismiss="modal">
+                <button type="button" class="d-none d-sm-inline-block btn btn-sm btn-danger shadow-sm" data-bs-dismiss="modal">
                     <i class="far fa-window-close fa-sm text-white-50"></i> 취소
                 </button>
                 <a class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm" id="modal-upload">
@@ -103,7 +103,7 @@
             <!--modal header-->
             <div class="modal-header">
                 <h5 class="modal-title" id="">제품 정보 문서 등록</h5>
-                <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                <button class="close" type="button" data-bs-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">×</span>
                 </button>
             </div>
@@ -131,7 +131,7 @@
                     </span>
                     <span class="text">제품문서업로드양식다운로드</span>
                 </a>
-                <button class="btn btn-secondary" type="button" data-dismiss="modal">취소</button>
+                <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">취소</button>
                 <button type="button" class="btn btn-primary" id="fileReadBtn">업로드</button>
             </div>
             <!--modal footer-->
@@ -147,12 +147,7 @@
 </a>
 
 <!--게시판 관련 js-->
-<!-- Page level plugins -->
-<script src="/static/vendor/datatables/jquery.dataTables.min.js"></script>
-<script src="/static/vendor/datatables/dataTables.bootstrap4.min.js"></script>
 <script src="/static/js/dropzone/dropzone.min.js"></script>
-<!-- Page level custom scripts -->
-<script src="/static/js/demo/datatables-demo.js"></script>
 
 <script>
     Dropzone.autoDiscover = false; // dropzone 초기화

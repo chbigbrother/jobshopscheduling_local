@@ -6,6 +6,9 @@ class Information(models.Model):
     comp_id = models.IntegerField(primary_key=True)  # 작업호기
     comp_name = models.CharField(max_length=150, null=False)  # 제품명
     credibility = models.FloatField(null=True)  # 신뢰도
+    address = models.CharField(max_length=200, null=False)  # 회사 위치
+    contact = models.CharField(max_length=50, null=False)  # 연락처
+    email = models.CharField(max_length=100, null=False)  # 이메일
     class Meta:
         verbose_name_plural = '회사정보등록'
 

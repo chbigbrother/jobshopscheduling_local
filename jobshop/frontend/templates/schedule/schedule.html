@@ -61,7 +61,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h4 class="modal-title" id="exampleModalLabel">작업 스케줄링 설정</h4>
-                <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                <button class="close" type="button" data-bs-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">×</span>
                     </button>
             </div>
@@ -114,15 +114,15 @@
                         </table>
                     </div>
                 </div>-->
-                <div class="row pknu-modal-row">
+                <!--<div class="row pknu-modal-row">
                     <div class="col-md-3"><label for="estDate" class="pt-2" style="font-size:0.95rem;">작업기한설정</label></div>
                     <div class="col-lg-7">
                         <input class="form-control text-center" type="text" name="dateFrom" id="estDate" />
                     </div>
-                </div>
+                </div>-->
             </div>
             <div class="modal-footer" id="htfooter">
-                <button type="button" class="d-none d-sm-inline-block btn btn-sm btn-danger shadow-sm" data-dismiss="modal">
+                <button type="button" class="d-none d-sm-inline-block btn btn-sm btn-danger shadow-sm" data-bs-dismiss="modal">
                     <i class="far fa-window-close fa-sm text-white-50"></i> 취소
                 </button>
                 <a href="#" onclick="activate()" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
@@ -345,7 +345,8 @@
             $('#selectOrder').html('');
             var result = orderSearch($('#ordDateFrom').val(), $('#ordDateTo').val());
             if (result.length > 0) {
-                var innerHTML = '<select class="form-control" name="select" multiple="multiple" id="selectOrder" style="width:18.85rem;">';
+                var innerHTML = '';
+                innerHTML += '<select class="form-control" name="select" multiple="multiple" id="selectOrder" style="width:18.85rem;">';
                 for (var i = 0; i < result.length; i++) {
                     if (typeof result[i] !== 'undefined') {
                         innerHTML += '<option class="' + result[i].amount + "_" + result[i].avail_fac_cnt + '" value="' + result[i].prod_name + '">' + result[i].prod_name + ' 수량: ' + result[i].amount + ' yd</option>';
@@ -378,17 +379,46 @@
                     var amt_cnt = amt[0]; // 수량
                     var amt_val = amt[1]; // 기계 대수
                     if (typeof selected_ord[i].value != 'undefined') {
-                        innerHTML += '<input type="text" id="' + selected_ord[i].value + '" class="form-control text-center flatpickr-input ordamt ordamt_' + amt_cnt + '" value="' + selected_ord[i].innerText + '" style="margin-bottom:1rem;" readonly="readonly" />';
+                        innerHTML += '<div class="col-xl-13" id="accordion">'+
+                                    '<div class="accordion accordion-header-bg accordion-bordered" id="accordion">'+
+                                        '<div class="accordion-item">'+
+                                            '<div class="accordion-header rounded-lg" id="collapse-' + i + '" data-bs-toggle="collapse" data-bs-target="#collapse' + i + '" aria-controls="collapse' + i + '"   aria-expanded="true"  role="button">'+
+                                                '<span class="accordion-header-icon"></span>'+
+                                                '<span class="accordion-header-text ordamt ordamt_' + amt_cnt + '" id="' + selected_ord[i].value + '">' + selected_ord[i].innerText + '</span>'+
+                                                '<span class="accordion-header-indicator"></span>'+
+                                            '</div>';
+                                            if(i == 0){
+                                                innerHTML += '<div id="collapse' + i + '" class="collapse accordion__body show" aria-labelledby="accord-7One" data-bs-parent="#accordion">';
+                                            } else {
+                                                innerHTML += '<div id="collapse' + i + '" class="collapse accordion__body" aria-labelledby="accord-7One" data-bs-parent="#accordion">';
+                                            }
+                                   innerHTML += '<div class="accordion-body-text">'+
+                                                    '<label class="pt-2" style="margin-right:2.2rem;">기계 대수</label>'+
+                                                    '<input type="text"  placeholder="기계 대수 설정" class="col-md-6 form-control setMachineNum" value="' + amt_val + '" />'+
+                                                    '<label class="pt-3" style="margin-right:2.2rem;">작업 기한</label>'+
+                                                    '<input class="col-md-6 form-control text-center estDate" type="text" name="dateFrom"/>'+
+                                                '</div>'+
+                                            '</div>'+
+                                        '</div>'+
+                                    '</div>'+
+                                '</div>';
+                        // innerHTML += '<input type="text" id="' + selected_ord[i].value + '" class="form-control text-center flatpickr-input ordamt ordamt_' + amt_cnt + '" value="' + selected_ord[i].innerText + '" style="margin-bottom:1rem;" readonly="readonly" />';
                         // innerHTML += '<p class="modal-p">※ 제품별 수량에 따라 사용할 기계의 대수를 입력해 주세요.<p/>';
-                        innerHTML += '<label class="pt-2" style="margin-right:1.4rem;">기계 대수</label>';
-                        innerHTML += '<input type="text"  style="margin-right:2.2rem;" placeholder="기계 대수 설정" class="col-md-7 form-control setMachineNum" value="' + amt_val + '" />';
                         // innerHTML += '<label class="pt-2" style="margin-right:0.5rem;">작업 개수</label>';
                         // innerHTML += '<input type="text" placeholder="작업 개수 설정" class="col-md-2-1 form-control setOptNum" value="' + amt_val * 9 + '" /><br/>';
                         // 기계 선택 (count 수만큼 제한)
-                        innerHTML += '<hr class="hr-modal"/>';
+                        // innerHTML += '<hr class="hr-modal"/>';
                     }
                 }
                 $('#divSelectOrder_old').html(innerHTML);
+                // 검색 날짜 init
+                flatpickr(".estDate", {
+                    locale: Flatpickr.l10ns.ko,
+                    enableTime: false,
+                    dateFormat: "Y-m-d",
+                    disableMobile: true,
+                    defaultDate: [today.format('YYYY-MM-DD')]
+                });
                 $('#divSelectOrder_old').attr('id', 'divSelectOrder');
                 $(".availfacnum").multipleSelect({
                     filter: true
@@ -479,136 +509,137 @@
             contentType: 'application/json',
             processData: false,
             success: function(result) {
-                var dataset = new Array();
-                console.log(result);
-                var x_min = result[0].work_str_date;
-                var y_min = result[0].y_axis_1;
-                enddate = new Date(result[0].work_end_date);
-                for (var i = 0; i < result.length; i++) {
-                    var xmin = new Date(result[0].work_str_date);
-                    var x_axis_1 = new Date(xmin.setDate(xmin.getDate() + result[i].x_axis_1));
-                    var x_axis_2 = result[i].x_axis_2 - result[i].x_axis_1;
-                    if (y_min > result[i].y_axis_1) {y_min = result[i].y_axis_1;}
-                    if (xmax < result[i].x_axis_2) {xmax = result[i].x_axis_2;}
-                    if (ymax < result[i].y_axis_1) {ymax = result[i].y_axis_1;}
-                    dataset.push({
-                        label: result[i].prod_name,
-                        backgroundColor: "rgba(78, 115, 223, 0.05)",
-                        borderColor: result[i].sch_color,
-                        fill: false,
-                        responsive: true,
-                        borderWidth: 15,
-                        pointRadius: 0,
-                        data: [{
-                            x: x_axis_1,
-                            y: result[i].y_axis_1,
-                        }, {
-                            x: new Date(xmin.setDate(xmin.getDate() + x_axis_2)),
-                            y: result[i].y_axis_1,
-                        }]
-                    })
-                }
-
-                // chart.js 그리기
-                var scatterChart = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        datasets: dataset
-                    },
-                    options: {
-                        // y축 빨간선 표시
-                        annotation: {
-                            annotations: [{
-                                drawTime: "afterDatasetsDraw",
-                                type: "line",
-                                mode: "vertical",
-                                scaleID: "x-axis-0",
-                                value: enddate,
-                                borderWidth: 1,
-                                borderColor: "red",
-                                label: {
-                                    content: "work deadline : " + (enddate.getMonth() + 1) + "/" + enddate.getDate() + "",
-                                    enabled: true,
-                                    position: "top",
-                                    backgroundColor: "rgba(160,170,174,100)",
-                                },
+                if(result.length>0){
+                    var dataset = new Array();
+                    var x_min = result[0].work_str_date;
+                    var y_min = result[0].y_axis_1;
+                    enddate = new Date(result[0].work_end_date);
+                    for (var i = 0; i < result.length; i++) {
+                        var xmin = new Date(result[0].work_str_date);
+                        var x_axis_1 = new Date(xmin.setDate(xmin.getDate() + result[i].x_axis_1));
+                        var x_axis_2 = result[i].x_axis_2 - result[i].x_axis_1;
+                        if (y_min > result[i].y_axis_1) {y_min = result[i].y_axis_1;}
+                        if (xmax < result[i].x_axis_2) {xmax = result[i].x_axis_2;}
+                        if (ymax < result[i].y_axis_1) {ymax = result[i].y_axis_1;}
+                        dataset.push({
+                            label: result[i].prod_name,
+                            backgroundColor: "rgba(78, 115, 223, 0.05)",
+                            borderColor: result[i].sch_color,
+                            fill: false,
+                            responsive: true,
+                            borderWidth: 15,
+                            pointRadius: 0,
+                            data: [{
+                                x: x_axis_1,
+                                y: result[i].y_axis_1,
+                            }, {
+                                x: new Date(xmin.setDate(xmin.getDate() + x_axis_2)),
+                                y: result[i].y_axis_1,
                             }]
-                        }, // y축 빨간선 표시
-                        animation: {
-                            onComplete: function() {
-                                var ctx = this.chart.ctx;
-                                var cht = this.chart;
-                                ctx.font = Chart.helpers.fontString(Chart.defaults.global.defaultFontFamily, 'light', Chart.defaults.global.defaultFontFamily);
-                                ctx.fillStyle = "#466964";
-                                ctx.textAlign = 'center';
-                                ctx.textBaseline = 'bottom';
+                        })
+                    }
 
-                                this.data.datasets.forEach(function(dataset, i) {
-                                    var meta = cht.controller.getDatasetMeta(i);
-                                    var data = dataset.label;
-                                    var arr = new Array();
-                                    arr.push(data);
-                                    meta.data.forEach(function(bar, index){
-                                        var label = arr[index];
-                                        if (typeof label == 'undefined') {label = ''}
-                                        ctx.fillText(label, bar._model.x, bar._model.y-5);
-                                    })
-
-                                });
-
-                            }
+                    // chart.js 그리기
+                    var scatterChart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            datasets: dataset
                         },
-                        legend: {
-                            display: false
-                        },
-                        scales: {
-                            xAxes: [{
-                                type: 'time',
-                                position: 'bottom',
-                                scaleLabel: {
-                                    display: true,
-                                    labelString: 'dates'// '날짜'
-                                },
-                                // ticks: {
-                                time: {
-                                    unit: 'day',
-                                    unitStepSize: 1,
-                                    displayFormats: {
-                                        'day': 'MM / DD'
+                        options: {
+                            // y축 빨간선 표시
+                            annotation: {
+                                annotations: [{
+                                    drawTime: "afterDatasetsDraw",
+                                    type: "line",
+                                    mode: "vertical",
+                                    scaleID: "x-axis-0",
+                                    value: enddate,
+                                    borderWidth: 1,
+                                    borderColor: "red",
+                                    label: {
+                                        content: "work deadline : " + (enddate.getMonth() + 1) + "/" + enddate.getDate() + "",
+                                        enabled: true,
+                                        position: "top",
+                                        backgroundColor: "rgba(160,170,174,100)",
+                                    },
+                                }]
+                            }, // y축 빨간선 표시
+                            animation: {
+                                onComplete: function() {
+                                    var ctx = this.chart.ctx;
+                                    var cht = this.chart;
+                                    ctx.font = Chart.helpers.fontString(Chart.defaults.global.defaultFontFamily, 'light', Chart.defaults.global.defaultFontFamily);
+                                    ctx.fillStyle = "#466964";
+                                    ctx.textAlign = 'center';
+                                    ctx.textBaseline = 'bottom';
+
+                                    this.data.datasets.forEach(function(dataset, i) {
+                                        var meta = cht.controller.getDatasetMeta(i);
+                                        var data = dataset.label;
+                                        var arr = new Array();
+                                        arr.push(data);
+                                        meta.data.forEach(function(bar, index){
+                                            var label = arr[index];
+                                            if (typeof label == 'undefined') {label = ''}
+                                            ctx.fillText(label, bar._model.x, bar._model.y-5);
+                                        })
+
+                                    });
+
+                                }
+                            },
+                            legend: {
+                                display: false
+                            },
+                            scales: {
+                                xAxes: [{
+                                    type: 'time',
+                                    position: 'bottom',
+                                    scaleLabel: {
+                                        display: true,
+                                        labelString: 'dates'// '날짜'
+                                    },
+                                    // ticks: {
+                                    time: {
+                                        unit: 'day',
+                                        unitStepSize: 1,
+                                        displayFormats: {
+                                            'day': 'MM / DD'
+                                        }
+                                        // min: x_min,
+                                        // max: xmin + (xmax/10),
+                                        // suggestedMin: 1,
+                                        // maxRotation: 0,
+                                        // stepSize: 1
                                     }
-                                    // min: x_min,
-                                    // max: xmin + (xmax/10),
-                                    // suggestedMin: 1,
-                                    // maxRotation: 0,
-                                    // stepSize: 1
-                                }
-                            }],
-                            yAxes: [{
-                                scaleLabel: {
-                                    display: false
-                                },
-                                scaleLabel: {
-                                    display: true,
-                                    labelString: 'machine number' // '기계 번호'
-                                },
-                                ticks: {
-                                    beginAtZero: true,
-                                    stepSize: 1,
-                                    min: y_min - 1,
-                                    max: ymax + 1
-                                }
-                            }]
+                                }],
+                                yAxes: [{
+                                    scaleLabel: {
+                                        display: false
+                                    },
+                                    scaleLabel: {
+                                        display: true,
+                                        labelString: 'machine number' // '기계 번호'
+                                    },
+                                    ticks: {
+                                        beginAtZero: true,
+                                        stepSize: 1,
+                                        min: y_min - 1,
+                                        max: ymax + 1
+                                    }
+                                }]
+                            },
+                            pan: {
+                                enabled: true,
+                                mode: 'x',
+                            },
+                            zoom: {
+                                enabled: true,
+                                mode: 'x',
+                            },
                         },
-                        pan: {
-                            enabled: true,
-                            mode: 'x',
-                        },
-                        zoom: {
-                            enabled: true,
-                            mode: 'x',
-                        },
-                    },
-                });
+                    });
+                }
             }
         });
 

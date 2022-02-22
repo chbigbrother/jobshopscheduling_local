@@ -33,6 +33,7 @@
     <link href="/static/vendor/datatables/dataTables.bootstrap4.min.css" rel="stylesheet">
     <link href="/static/calendar/core/main.css" rel="stylesheet" type="text/css">
     <link href="/static/calendar/daygrid/main.css" rel="stylesheet" type="text/css">
+    <link href="/static/vendor/datatables/jquery/dataTables.min.css" rel="stylesheet" type="text/css">
 </head>
 <body id="page-top">
     <!-- Page Wrapper -->
@@ -50,7 +51,6 @@
                                 src="/static/img/logo_05.png" style="width:4.0rem;">
                 <div class="sidebar-brand-text mx-3">섬유공정<br/>스케쥴러</div>
             </a>
-
             <!-- Divider -->
             <hr class="sidebar-divider my-0">
 
@@ -290,13 +290,13 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="exampleModalLabel">로그아웃 하시겠습니까?</h5>
-                    <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                    <button class="close" type="button" data-bs-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">×</span>
                     </button>
                 </div>
                 <div class="modal-body">현재 세션을 종료하시려면 아래의 "확인" 버튼을 눌러주세요.</div>
                 <div class="modal-footer">
-                    <button class="btn btn-secondary" type="button" data-dismiss="modal">취소</button>
+                    <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">취소</button>
                     <a class="btn btn-primary" href="{% url 'common:login' %}">확인</a>
                 </div>
             </div>
@@ -304,10 +304,13 @@
     </div>
     <!-- Bootstrap core JavaScript-->
     <script src="/static/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/vendor/bootstrap/js/global.min.js"></script>
 
     <!-- Core plugin JavaScript-->
     <script src="/static/vendor/jquery-easing/jquery.easing.min.js"></script>
-
+    <!-- Page level plugins -->
+    <script src="/static/vendor/datatables/jquery.dataTables.min.js"></script>
+    <script src="/static/vendor/datatables/dataTables.bootstrap4.min.js"></script>
     <!-- Custom scripts for all pages-->
     <script src="/static/js/sb-admin-2.min.js"></script>
     <script src="/static/js/moment/moment.js"></script>

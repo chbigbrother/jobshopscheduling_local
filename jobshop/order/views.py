@@ -119,21 +119,40 @@ def order_list_query(request):
         i.exp_date = date_str(i.exp_date)
         i.sch_date = date_str(i.sch_date)
         fixed_status = OrderSchedule.objects.filter(order_id=i.order_id).order_by('-created_at')
-        waiting_list = OrderSchedule.objects.filter(order_id=i.order_id, use_yn="N").order_by('-created_at')
-        if len(fixed_status) > 1:
-            if fixed_status[0].use_yn == 'Y':
-                i.ord_status = 1
-            else:
-                i.ord_status = 0
-        if len(fixed_status) <= 1 and len(fixed_status) > 0:
-            if fixed_status[0].use_yn == 'Y':
-                i.ord_status = 1
-            else:
-                i.ord_status = 0
+        if len(fixed_status) > 0 and group != 'customer':
+            schedules = Schedule.objects.get(sch_id=fixed_status[0].sch_id_id)
+            if schedules.comp_id_id is not None:
+                if schedules.comp_id_id!=group_id:
+                    i.ord_status = 2
+            if len(fixed_status) > 1 and schedules.comp_id_id==group_id:
+                if fixed_status[0].use_yn == 'Y':
+                    i.ord_status = 1
+                else:
+                    i.ord_status = 0
+
+            if len(fixed_status) > 1 and schedules.comp_id_id!=group_id:
+                i.ord_status = 2
+
+            if len(fixed_status) <= 1 and len(fixed_status) > 0 and schedules.comp_id_id==group_id:
+                if fixed_status[0].use_yn == 'Y':
+                    i.ord_status = 1
+                else:
+                    i.ord_status = 0
+            if len(fixed_status) <= 1 and len(fixed_status) > 0 and schedules.comp_id_id != group_id:
+                i.ord_status = 2
+        else:
+            if len(fixed_status) > 1:
+                if fixed_status[0].use_yn == 'Y':
+                    i.ord_status = 1
+                else:
+                    i.ord_status = 0
+            if len(fixed_status) <= 1 and len(fixed_status) > 0:
+                if fixed_status[0].use_yn == 'Y':
+                    i.ord_status = 1
+                else:
+                    i.ord_status = 0
         if len(fixed_status) == 0:
-            i.ord_status = 2
-        # if len(waiting_list) > 0:
-        #     i.ord_status = 0
+                i.ord_status = 2
     return sch_date_from.strftime("%Y-%m-%d"), sch_date_to.strftime("%Y-%m-%d"), result_list # order_list
 
 # 수주관리검색 수정
@@ -192,7 +211,7 @@ def order_list_search(request):
             "GROUP BY prod_id")
         for i in order_list:
             product_dict = {}
-            product = Product.objects.get(prod_id=i.prod_id)
+            product = Product.objects.filter(prod_id=i.prod_id)[0]
             # 필요 기계 대수 default 설정값 계산
             # (수량 / 일일생산량) / 2
             avail_fac_cnt = 0
@@ -369,6 +388,8 @@ def fixed_order(request):
     if group_name == 'admin':  # 관리자
         result = OrderSchedule.objects.filter(sch_id__work_str_date__gte=date_from, sch_id__work_str_date__lte=date_to)
         for q in result:
+            prod_name = Product.objects.filter(prod_id=q.order_id.prod_id)[0]
+            prod_name = prod_name.prod_name
             if (q.use_yn == 'Y'):
                 final_dict = {}
                 final_dict['comp_name'] = q.sch_id.comp_id.comp_name  # 회사명
@@ -377,7 +398,7 @@ def fixed_order(request):
                 final_dict['cust_name'] = q.order_id.cust_name  # 고객명
                 final_dict['sch_date'] = q.order_id.sch_date  # 주문일자
                 final_dict['exp_date'] = q.order_id.exp_date  # 작업기한
-                final_dict['textile_name'] = q.order_id.prod_id.prod_name  # 소재명
+                final_dict['textile_name'] = prod_name  # 소재명
                 final_dict['amount'] = q.order_id.amount  # 주문수량
                 final_result.append(final_dict)
         custlist = []
